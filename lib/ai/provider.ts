@@ -9,6 +9,11 @@
 export interface AIProvider {
   /** Short name for logging, e.g. "anthropic" */
   name: string;
-  /** Send a system + user prompt, get back the raw text response. */
-  complete(params: { system: string; user: string }): Promise<string>;
+  /**
+   * Send a system + user prompt, get back the raw text response.
+   * `signal` lets the caller cancel an in-flight request — wired all the
+   * way from the browser's "Cancel" button through to the actual Claude
+   * API call, so cancelling really stops spending, not just stops waiting.
+   */
+  complete(params: { system: string; user: string; signal?: AbortSignal }): Promise<string>;
 }

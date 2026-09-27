@@ -46,9 +46,17 @@ export async function POST(request: Request) {
 
   try {
     const provider = createAnthropicProvider();
-    const analysis = await runAnalysisPipeline(provider, input);
+    // request.signal fires when the browser cancels or disconnects — passing
+    // it through to every Claude call means clicking "Cancel" actually stops
+    // in-flight and future API calls, not just the browser's own waiting.
+    const analysis = await runAnalysisPipeline(provider, input, undefined, request.signal);
     return NextResponse.json({ mode: "live", analysis });
   } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      // Client cancelled — nothing is listening for a response anymore.
+      console.log("Analysis cancelled by client.");
+      return NextResponse.json({ mode: "cancelled" });
+    }
     console.error("Live analysis failed:", err);
     const demoFallback = findDemoAnalysisForQuery(input.companyName);
     return NextResponse.json(

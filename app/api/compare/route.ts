@@ -52,7 +52,8 @@ export async function POST(request: Request) {
       "ComparisonAgent",
       comparisonResultSchema,
       prompt.system,
-      prompt.user
+      prompt.user,
+      request.signal
     );
     return NextResponse.json({ mode: "live", comparison });
   } catch (err) {

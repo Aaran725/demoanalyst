@@ -59,7 +59,8 @@ import { z } from "zod";
 export async function runAnalysisPipeline(
   provider: AIProvider,
   rawInput: unknown,
-  onProgress?: (step: ProgressStep) => void
+  onProgress?: (step: ProgressStep) => void,
+  signal?: AbortSignal
 ): Promise<FullAnalysis> {
   const input: StartupInput = startupInputSchema.parse(rawInput);
 
@@ -70,29 +71,32 @@ export async function runAnalysisPipeline(
     "ResearchAgent",
     startupSnapshotSchema,
     researchPrompt.system,
-    researchPrompt.user
+    researchPrompt.user,
+    signal
   );
 
   ["product", "market", "business_model", "traction", "competitors", "founders"].forEach((s) =>
     onProgress?.(s as ProgressStep)
   );
   const [market, product, businessModel, traction, competitors, founders] = await Promise.all([
-    runStep(provider, "MarketAgent", marketIntelligenceSchema, buildMarketPrompt(input, snapshot)),
-    runStep(provider, "ProductAgent", productAnalysisSchema, buildProductPrompt(input, snapshot)),
+    runStep(provider, "MarketAgent", marketIntelligenceSchema, buildMarketPrompt(input, snapshot), signal),
+    runStep(provider, "ProductAgent", productAnalysisSchema, buildProductPrompt(input, snapshot), signal),
     runStep(
       provider,
       "BusinessModelAgent",
       businessModelSchema,
-      buildBusinessModelPrompt(input, snapshot)
+      buildBusinessModelPrompt(input, snapshot),
+      signal
     ),
-    runStep(provider, "TractionAgent", tractionSchema, buildTractionPrompt(input, snapshot)),
+    runStep(provider, "TractionAgent", tractionSchema, buildTractionPrompt(input, snapshot), signal),
     runStep(
       provider,
       "CompetitionAgent",
       competitorMapSchema,
-      buildCompetitionPrompt(input, snapshot)
+      buildCompetitionPrompt(input, snapshot),
+      signal
     ),
-    runStep(provider, "FounderAgent", founderAnalysisSchema, buildFounderPrompt(input, snapshot)),
+    runStep(provider, "FounderAgent", founderAnalysisSchema, buildFounderPrompt(input, snapshot), signal),
   ]);
 
   ["moat", "strategic_fit", "pegasus_fit", "japan", "devils_advocate"].forEach((s) =>
@@ -103,21 +107,24 @@ export async function runAnalysisPipeline(
       provider,
       "MoatAgent",
       competitiveMoatSchema,
-      buildMoatPrompt(input, snapshot, product, competitors)
+      buildMoatPrompt(input, snapshot, product, competitors),
+      signal
     ),
     runStep(
       provider,
       "StrategicFitAgent",
       strategicFitSchema,
-      buildStrategicFitPrompt(input, snapshot, market)
+      buildStrategicFitPrompt(input, snapshot, market),
+      signal
     ),
-    runStep(provider, "PegasusFitAgent", pegasusFitSchema, buildPegasusFitPrompt(input, snapshot)),
-    runStep(provider, "JapanAgent", japanOpportunitySchema, buildJapanPrompt(input, snapshot)),
+    runStep(provider, "PegasusFitAgent", pegasusFitSchema, buildPegasusFitPrompt(input, snapshot), signal),
+    runStep(provider, "JapanAgent", japanOpportunitySchema, buildJapanPrompt(input, snapshot), signal),
     runStep(
       provider,
       "DevilsAdvocateAgent",
       devilsAdvocateSchema,
-      buildDevilsAdvocatePrompt(input, snapshot, market, competitors)
+      buildDevilsAdvocatePrompt(input, snapshot, market, competitors),
+      signal
     ),
   ]);
 
@@ -131,7 +138,8 @@ export async function runAnalysisPipeline(
     provider,
     "DiligenceAgent",
     diligenceSchema,
-    buildDiligencePrompt(input, snapshot, businessModel, traction, competitors, devilsAdvocate)
+    buildDiligencePrompt(input, snapshot, businessModel, traction, competitors, devilsAdvocate),
+    signal
   );
 
   const analysisSoFar = {
@@ -161,7 +169,8 @@ export async function runAnalysisPipeline(
       missingInformation: z.array(z.string()),
       sources: icMemoSchema.shape.sources,
     }),
-    buildMemoPrompt(input, analysisSoFar)
+    buildMemoPrompt(input, analysisSoFar),
+    signal
   );
 
   onProgress?.("done");
@@ -184,7 +193,8 @@ function runStep<T>(
   provider: AIProvider,
   agentName: string,
   schema: z.ZodType<T>,
-  prompt: { system: string; user: string }
+  prompt: { system: string; user: string },
+  signal?: AbortSignal
 ): Promise<T> {
-  return callAgent(provider, agentName, schema, prompt.system, prompt.user);
+  return callAgent(provider, agentName, schema, prompt.system, prompt.user, signal);
 }

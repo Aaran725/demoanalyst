@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Ban } from "lucide-react";
 import { StartupInputForm } from "@/components/analysis/StartupInputForm";
 import { AnalysisProgress } from "@/components/analysis/AnalysisProgress";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { useAnalyze } from "@/lib/useAnalyze";
 
 export default function AnalyzeStartupPage() {
   const router = useRouter();
-  const { state, runAnalysis, useDemoFallback } = useAnalyze();
+  const { state, runAnalysis, cancel, useDemoFallback } = useAnalyze();
 
   useEffect(() => {
     if (state.status === "success") {
@@ -20,7 +20,7 @@ export default function AnalyzeStartupPage() {
   }, [state, router]);
 
   if (state.status === "loading") {
-    return <AnalysisProgress isDone={false} />;
+    return <AnalysisProgress isDone={false} startedAt={state.startedAt} onCancel={cancel} />;
   }
 
   return (
@@ -32,6 +32,17 @@ export default function AnalyzeStartupPage() {
           the rest and clearly label anything it couldn&apos;t verify.
         </p>
       </div>
+
+      {state.status === "cancelled" && (
+        <Card className="border-ink-200 bg-ink-50">
+          <CardContent className="flex items-center gap-2 p-5">
+            <Ban size={16} className="shrink-0 text-ink-400" />
+            <p className="text-sm text-ink-700">
+              Cancelled — no further API calls were made for that run. Try again below.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {state.status === "error" && (
         <Card className="border-red-100 bg-red-50/40">

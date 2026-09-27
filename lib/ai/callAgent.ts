@@ -36,11 +36,14 @@ export async function callAgent<T>(
   agentName: string,
   schema: z.ZodType<T>,
   system: string,
-  user: string
+  user: string,
+  signal?: AbortSignal
 ): Promise<T> {
   let lastError = "";
 
   for (let attempt = 0; attempt < 2; attempt++) {
+    if (signal?.aborted) throw new DOMException("Analysis cancelled", "AbortError");
+
     const prompt =
       attempt === 0
         ? user
@@ -48,8 +51,11 @@ export async function callAgent<T>(
 
     let raw: string;
     try {
-      raw = await provider.complete({ system, user: prompt });
+      raw = await provider.complete({ system, user: prompt, signal });
     } catch (err) {
+      // Cancellation isn't a failure worth retrying — stop immediately so
+      // we don't keep spending on an analysis nobody's waiting for anymore.
+      if (err instanceof Error && err.name === "AbortError") throw err;
       lastError = err instanceof Error ? err.message : String(err);
       continue;
     }

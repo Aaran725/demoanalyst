@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Swords, AlertTriangle } from "lucide-react";
+import { Swords, AlertTriangle, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Timer } from "@/components/challenge/Timer";
@@ -19,7 +19,7 @@ export default function ChallengePage() {
   const [companyQuery, setCompanyQuery] = useState("");
   const [askAaranFirst, setAskAaranFirst] = useState(false);
   const [aaranAnswers, setAaranAnswers] = useState<AaranAnswers | null>(null);
-  const { state, runAnalysis, useDemoFallback } = useAnalyze();
+  const { state, runAnalysis, cancel, useDemoFallback } = useAnalyze();
 
   function startChallenge() {
     if (askAaranFirst) {
@@ -34,6 +34,12 @@ export default function ChallengePage() {
     setAaranAnswers(answers);
     setStage("running");
     runAnalysis({ companyName: companyQuery.trim() });
+  }
+
+  function startOver() {
+    setStage("intro");
+    setCompanyQuery("");
+    setAaranAnswers(null);
   }
 
   if (stage === "intro") {
@@ -82,7 +88,23 @@ export default function ChallengePage() {
           <Timer running={state.status === "loading"} />
         </div>
 
-        {state.status === "loading" && <AnalysisProgress isDone={false} />}
+        {state.status === "loading" && (
+          <AnalysisProgress isDone={false} startedAt={state.startedAt} onCancel={cancel} />
+        )}
+
+        {state.status === "cancelled" && (
+          <Card className="mx-auto max-w-lg border-ink-200 bg-ink-50">
+            <CardContent className="flex items-center justify-between gap-3 p-5">
+              <div className="flex items-center gap-2">
+                <Ban size={16} className="shrink-0 text-ink-400" />
+                <p className="text-sm text-ink-700">Cancelled — no further API calls were made.</p>
+              </div>
+              <Button size="sm" variant="secondary" onClick={startOver}>
+                Start Over
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {state.status === "error" && (
           <Card className="mx-auto max-w-lg border-red-100 bg-red-50/40">

@@ -20,18 +20,21 @@ export function createAnthropicProvider(): AIProvider {
 
   return {
     name: "anthropic",
-    async complete({ system, user }) {
-      const response = await client.messages.create({
-        model,
-        max_tokens: 8000,
-        // Every agent here does focused, single-step JSON generation from
-        // context it's already been given — not multi-step reasoning — so
-        // extended thinking (on by default on this model) only adds latency
-        // and cost without improving output quality. Turned off for speed.
-        thinking: { type: "disabled" },
-        system,
-        messages: [{ role: "user", content: user }],
-      });
+    async complete({ system, user, signal }) {
+      const response = await client.messages.create(
+        {
+          model,
+          max_tokens: 8000,
+          // Every agent here does focused, single-step JSON generation from
+          // context it's already been given — not multi-step reasoning — so
+          // extended thinking (on by default on this model) only adds latency
+          // and cost without improving output quality. Turned off for speed.
+          thinking: { type: "disabled" },
+          system,
+          messages: [{ role: "user", content: user }],
+        },
+        { signal }
+      );
 
       const textBlock = response.content.find((block) => block.type === "text");
       if (!textBlock || textBlock.type !== "text") {
