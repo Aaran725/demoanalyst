@@ -35,8 +35,19 @@ export function createAnthropicProvider(): AIProvider {
           // Claude's own hosted web search — no separate API key, billed
           // through ANTHROPIC_API_KEY above. Only a few agents ask for this
           // (see orchestrator.ts) since it adds latency and cost per search.
+          // max_uses defaults to 4, but an agent checking many distinct
+          // facts (e.g. TractionAgent's ~10 separate metrics) can ask for
+          // more by passing a number instead of `true`.
           ...(enableWebSearch
-            ? { tools: [{ type: "web_search_20260209" as const, name: "web_search" as const, max_uses: 4 }] }
+            ? {
+                tools: [
+                  {
+                    type: "web_search_20260209" as const,
+                    name: "web_search" as const,
+                    max_uses: typeof enableWebSearch === "number" ? enableWebSearch : 4,
+                  },
+                ],
+              }
             : {}),
         },
         { signal }

@@ -3,11 +3,22 @@ import { ClaimBlock } from "../ClaimBlock";
 import { SectionShell, SubHeading } from "../SectionShell";
 import type { StartupSnapshot } from "@/lib/ai/schemas";
 
-function FactRow({ label, value }: { label: string; value: string }) {
+function FactRow({ label, value, href }: { label: string; value: string; href?: string }) {
   return (
-    <div>
+    <div className="min-w-0">
       <div className="text-xs font-medium uppercase tracking-wide text-ink-400">{label}</div>
-      <div className="text-sm text-ink-800">{value || "—"}</div>
+      {href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          className="block break-all text-sm text-signal-600 hover:underline"
+        >
+          {value}
+        </a>
+      ) : (
+        <div className="break-words text-sm text-ink-800">{value || "—"}</div>
+      )}
     </div>
   );
 }
@@ -18,7 +29,7 @@ export function SnapshotSection({ snapshot }: { snapshot: StartupSnapshot }) {
       <Card>
         <CardContent className="grid grid-cols-2 gap-4 p-5 sm:grid-cols-4">
           <FactRow label="Company" value={snapshot.companyName} />
-          <FactRow label="Website" value={snapshot.website ?? "Unknown"} />
+          <FactRow label="Website" value={snapshot.website ?? "Unknown"} href={snapshot.website} />
           <FactRow label="Headquarters" value={snapshot.headquarters.text} />
           <FactRow label="Founded" value={snapshot.founded.text} />
           <FactRow label="Founders" value={snapshot.founders.join(", ") || "Unknown"} />

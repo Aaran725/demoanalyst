@@ -134,7 +134,13 @@ export async function runAnalysisPipeline(
         tractionSchema,
         buildTractionPrompt(input, snapshot),
         signal,
-        true,
+        // TractionAgent has to verify ~10 distinct financial/usage metrics
+        // (revenue, ARR, growth, customers, users, retention, partnerships,
+        // funding, product adoption, international expansion) — the default
+        // 4-search budget (see anthropic.ts) isn't enough to run a separate
+        // targeted search per metric, which was leaving genuinely-findable
+        // figures marked "unknown" just because the searches ran out.
+        8,
         recordTrace(2)
       ),
       runStep(
@@ -278,7 +284,7 @@ function runStep<T>(
   schema: z.ZodType<T>,
   prompt: { system: string; user: string },
   signal?: AbortSignal,
-  enableWebSearch?: boolean,
+  enableWebSearch?: boolean | number,
   onTrace?: (info: AgentTraceInfo) => void
 ): Promise<T> {
   return callAgent(provider, agentName, schema, prompt.system, prompt.user, signal, enableWebSearch, onTrace);

@@ -25,6 +25,6 @@ export interface AIProvider {
     system: string;
     user: string;
     signal?: AbortSignal;
-    enableWebSearch?: boolean;
+    enableWebSearch?: boolean | number;
   }): Promise<{ text: string; meta: { webSearchCount: number } }>;
 }

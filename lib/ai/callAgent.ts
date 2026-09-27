@@ -51,7 +51,7 @@ export async function callAgent<T>(
   system: string,
   user: string,
   signal?: AbortSignal,
-  enableWebSearch?: boolean,
+  enableWebSearch?: boolean | number,
   onTrace?: (info: AgentTraceInfo) => void
 ): Promise<T> {
   const startedAt = Date.now();

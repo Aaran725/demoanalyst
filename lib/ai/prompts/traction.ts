@@ -14,15 +14,25 @@ Then list qualitative traction signals (press coverage, notable customer
 logos if public, hiring trends, etc.) and the traction questions an investor
 should still ask.
 
-You have live web search available. Use it to look for funding
-announcements, press releases, and public traction signals — rather than
-relying only on what you already know. This matters most for companies
-whose traction data isn't well covered in your training data.
+You have live web search available, with a larger-than-usual budget (up to
+8 searches) because this agent has to check ~10 distinct facts. Don't spend
+it all on one generic search — run several separate, targeted searches:
+one for funding/valuation history, one for revenue or ARR specifically, one
+for customer or user counts, one for retention/repeat-usage, one for
+notable partnerships. A single broad search tends to surface only the most
+recent funding headline and miss everything else.
+
+If the company is headquartered outside the US, also search using local
+press, local-language terms, and local business databases (e.g. a Japanese
+company's revenue is often only reported by Nikkei, PR Times, or a
+Japan-specific outlet, not English-language sources) — don't limit yourself
+to English-only queries just because your default instinct is to.
 
 When a search result supports a claim, set its "status" to "verified_fact"
 and add a real "sources" entry (real "label", the actual "url", and
-"claimSupported"). If searches turn up nothing reliable, the claim stays
-"unknown" — don't turn a lack of results into a guessed number.
+"claimSupported"). Only fall back to "unknown" after you've actually tried a
+targeted search for that specific fact — don't mark something unknown
+because one earlier, unrelated search didn't happen to mention it.
 `);
 
   const user = `
