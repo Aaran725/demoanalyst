@@ -12,13 +12,15 @@ import type { FullAnalysis } from "@/lib/ai/schemas";
 
 function StatCard({ label, value, icon: Icon }: { label: string; value: number; icon: typeof Search }) {
   return (
-    <Card>
+    <Card className="rounded-lg">
       <CardContent className="flex items-center justify-between p-5">
         <div>
-          <div className="text-2xl font-semibold text-ink-950">{value}</div>
-          <div className="text-xs font-medium uppercase tracking-wide text-ink-400">{label}</div>
+          <div className="font-mono text-3xl font-bold tracking-tight text-ink-950">{value}</div>
+          <div className="mt-1 text-xs font-medium uppercase tracking-wide text-ink-400">{label}</div>
         </div>
-        <Icon size={20} className="text-ink-300" />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-signal-50 text-signal-600">
+          <Icon size={18} />
+        </div>
       </CardContent>
     </Card>
   );
@@ -38,20 +40,26 @@ export default function DashboardPage() {
   return (
     <div className="space-y-10">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-ink-950">AARAN AI</h1>
-          <p className="mt-1 text-ink-500">Junior VC Copilot — AI venture intelligence for the next generation.</p>
-          <p className="mt-1 text-xs text-ink-400">Built by Aaran Chowdhery</p>
+        <div className="flex items-start gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-signal-600 font-mono text-lg font-extrabold text-white shadow-button">
+            A
+          </div>
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight text-ink-950">
+              AARAN AI <span className="font-medium text-ink-400">Junior VC Copilot</span>
+            </h1>
+            <p className="mt-1 font-mono text-[11px] tracking-wide text-ink-400">Built by Aaran Chowdhery</p>
+          </div>
         </div>
         <div className="flex gap-3">
-          <Button asChild size="lg">
-            <Link href="/analyze">
-              <Search size={16} /> Analyze a Startup
-            </Link>
-          </Button>
-          <Button asChild size="lg" variant="signal">
+          <Button asChild size="lg" variant="secondary">
             <Link href="/challenge">
               <Swords size={16} /> Challenge AARAN AI
+            </Link>
+          </Button>
+          <Button asChild size="lg">
+            <Link href="/analyze">
+              Analyze a Startup <Search size={16} />
             </Link>
           </Button>
         </div>
@@ -66,16 +74,16 @@ export default function DashboardPage() {
 
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-500">
             {saved.length > 0 ? "Recent Startup Analyses" : "Try a Demo Analysis"}
           </h2>
           {saved.length === 0 && <span className="text-xs text-ink-400">No saved research yet — these are built-in samples</span>}
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <Card className="divide-y divide-ink-100 overflow-hidden p-0">
           {allAnalyses.map((a) => (
             <AnalysisSummaryCard key={a.id} analysis={a} />
           ))}
-        </div>
+        </Card>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

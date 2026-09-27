@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader2, Check, X } from "lucide-react";
 import { PROGRESS_STEPS, PROGRESS_LABELS } from "@/lib/ai/progress";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 function formatElapsed(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
@@ -56,48 +57,52 @@ export function AnalysisProgress({
   const elapsedSeconds = Math.floor(elapsedMs / 1000);
 
   return (
-    <div className="mx-auto max-w-md space-y-6 py-16">
-      <div className="text-center">
-        <div className="font-mono text-2xl font-semibold text-ink-950">{formatElapsed(elapsedMs)}</div>
-        <p className="mt-1 text-xs text-ink-400">
-          {elapsedSeconds < 20
-            ? "Working..."
-            : elapsedSeconds < 90
-              ? "Still working — real analysis typically takes 30 seconds to 2 minutes."
-              : elapsedSeconds < 180
-                ? "Taking longer than usual, but real API calls can vary — still working."
-                : "This is well beyond normal. It may be stuck — cancel and try again if it doesn't finish soon."}
-        </p>
-      </div>
-
-      <div className="space-y-1">
-        {PROGRESS_STEPS.map((step, i) => {
-          const isComplete = isDone || i < activeIndex;
-          const isActive = !isDone && i === activeIndex;
-          return (
-            <div key={step} className="flex items-center gap-3 py-1.5">
-              {isComplete ? (
-                <Check size={16} className="shrink-0 text-evidence-fact" />
-              ) : isActive ? (
-                <Loader2 size={16} className="shrink-0 animate-spin text-signal-600" />
-              ) : (
-                <span className="h-4 w-4 shrink-0 rounded-full border border-ink-200" />
-              )}
-              <span className={isComplete || isActive ? "text-sm text-ink-800" : "text-sm text-ink-300"}>
-                {PROGRESS_LABELS[step]}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
-      {!isDone && onCancel && (
-        <div className="flex justify-center">
-          <Button variant="secondary" size="sm" onClick={onCancel}>
-            <X size={14} /> Cancel
-          </Button>
+    <div className="mx-auto max-w-md py-16">
+      <Card className="space-y-6 p-8">
+        <div className="text-center">
+          <div className="font-mono text-4xl font-bold tabular-nums tracking-tight text-ink-950">
+            {formatElapsed(elapsedMs)}
+          </div>
+          <p className="mt-2 text-xs text-ink-400">
+            {elapsedSeconds < 20
+              ? "Working..."
+              : elapsedSeconds < 90
+                ? "Still working — real analysis typically takes 30 seconds to 2 minutes."
+                : elapsedSeconds < 180
+                  ? "Taking longer than usual, but real API calls can vary — still working."
+                  : "This is well beyond normal. It may be stuck — cancel and try again if it doesn't finish soon."}
+          </p>
         </div>
-      )}
+
+        <div className="space-y-1 border-t border-ink-100 pt-4">
+          {PROGRESS_STEPS.map((step, i) => {
+            const isComplete = isDone || i < activeIndex;
+            const isActive = !isDone && i === activeIndex;
+            return (
+              <div key={step} className="flex items-center gap-3 py-1.5">
+                {isComplete ? (
+                  <Check size={16} className="shrink-0 text-evidence-fact" />
+                ) : isActive ? (
+                  <Loader2 size={16} className="shrink-0 animate-spin text-signal-600" />
+                ) : (
+                  <span className="h-4 w-4 shrink-0 rounded-full border border-ink-200" />
+                )}
+                <span className={isComplete || isActive ? "text-sm text-ink-800" : "text-sm text-ink-300"}>
+                  {PROGRESS_LABELS[step]}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {!isDone && onCancel && (
+          <div className="flex justify-center">
+            <Button variant="secondary" size="sm" onClick={onCancel}>
+              <X size={14} /> Cancel
+            </Button>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

@@ -15,9 +15,9 @@ export function SectionShell({
   return (
     <section className={cn("space-y-5", className)}>
       {title && (
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight text-ink-950">{title}</h2>
-          {description && <p className="mt-0.5 text-sm text-ink-400">{description}</p>}
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-xl font-bold tracking-tight text-ink-950">{title}</h2>
+          {description && <p className="text-sm text-ink-400">{description}</p>}
         </div>
       )}
       {children}

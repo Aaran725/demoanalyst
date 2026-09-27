@@ -33,9 +33,9 @@ export function EvidenceEngineChart({ breakdown }: { breakdown: EvidenceBreakdow
           <span className="text-xs text-ink-400">{total} claims across this report</span>
         </div>
 
-        {/* The stacked bar: one <= 24px-thick row, 2px gaps between segments,
+        {/* The stacked bar: one pill-capped row, 2px gaps between segments,
             rounded outer ends only (square where segments meet each other). */}
-        <div className="flex h-6 w-full gap-[2px]">
+        <div className="flex h-7 w-full gap-[2px]">
           {ORDER.map((status, i) => {
             const count = counts[status];
             if (count === 0) return null;
@@ -47,8 +47,8 @@ export function EvidenceEngineChart({ breakdown }: { breakdown: EvidenceBreakdow
               <div
                 key={status}
                 title={`${SEGMENT_CONFIG[status].label}: ${count} (${Math.round(pct)}%)`}
-                className={`${SEGMENT_CONFIG[status].barClass} ${isFirst ? "rounded-l" : ""} ${
-                  isLast ? "rounded-r" : ""
+                className={`${SEGMENT_CONFIG[status].barClass} ${isFirst ? "rounded-l-full" : ""} ${
+                  isLast ? "rounded-r-full" : ""
                 }`}
                 style={{ width: `${pct}%` }}
               />
@@ -63,7 +63,7 @@ export function EvidenceEngineChart({ breakdown }: { breakdown: EvidenceBreakdow
             <div key={status} className="flex items-center gap-1.5 text-xs">
               <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${SEGMENT_CONFIG[status].dotClass}`} />
               <span className="text-ink-600">{SEGMENT_CONFIG[status].label}</span>
-              <span className="font-medium text-ink-900">{counts[status]}</span>
+              <span className="font-mono font-semibold text-ink-900">{counts[status]}</span>
             </div>
           ))}
         </div>

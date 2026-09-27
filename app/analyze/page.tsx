@@ -26,7 +26,7 @@ export default function AnalyzeStartupPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-950">Analyze a Startup</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-ink-950">Analyze a Startup</h1>
         <p className="mt-1 text-sm text-ink-500">
           Enter what you know — even just a company name or website is enough. AARAN AI will fill in
           the rest and clearly label anything it couldn&apos;t verify.
@@ -60,7 +60,11 @@ export default function AnalyzeStartupPage() {
         </Card>
       )}
 
-      <StartupInputForm onSubmit={runAnalysis} />
+      <Card>
+        <CardContent className="p-6">
+          <StartupInputForm onSubmit={runAnalysis} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -32,9 +32,14 @@ export function Sidebar() {
 
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col border-r border-ink-100 bg-white">
-      <div className="px-5 py-6">
-        <div className="text-lg font-semibold tracking-tight text-ink-950">AARAN AI</div>
-        <div className="text-xs font-medium text-ink-400">Junior VC Copilot</div>
+      <div className="flex items-center gap-2.5 px-5 py-6">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-signal-600 font-mono text-sm font-extrabold text-white">
+          A
+        </div>
+        <div>
+          <div className="text-sm font-extrabold tracking-tight text-ink-950">AARAN AI</div>
+          <div className="text-xs font-medium text-ink-400">Junior VC Copilot</div>
+        </div>
       </div>
       <nav className="flex-1 space-y-0.5 px-3">
         {NAV_ITEMS.map((item) => {
@@ -46,7 +51,7 @@ export function Sidebar() {
               href={item.href}
               className={cn(
                 "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                active ? "bg-ink-950 text-white" : "text-ink-500 hover:bg-ink-50 hover:text-ink-900"
+                active ? "bg-signal-600 text-white shadow-button" : "text-ink-500 hover:bg-ink-50 hover:text-ink-900"
               )}
             >
               <Icon size={16} strokeWidth={2} />
@@ -55,7 +60,7 @@ export function Sidebar() {
           );
         })}
       </nav>
-      <div className="border-t border-ink-100 px-5 py-4 text-xs text-ink-400">
+      <div className="border-t border-ink-100 px-5 py-4 font-mono text-[11px] tracking-wide text-ink-400">
         Built by Aaran Chowdhery
       </div>
     </aside>

@@ -40,12 +40,12 @@ export function MoatStrengthChart({ factors }: { factors: MoatFactor[] }) {
           <div key={f.factor} className="flex items-center gap-3">
             <span className="w-40 shrink-0 text-xs font-medium text-ink-600">{FACTOR_LABEL[f.factor]}</span>
             <div
-              className={`h-3 flex-1 rounded ${cfg.dashed ? "border border-dashed border-ink-200" : "bg-ink-100"}`}
+              className={`h-2.5 flex-1 rounded-full ${cfg.dashed ? "border border-dashed border-ink-200" : "bg-ink-100"}`}
               title={`${FACTOR_LABEL[f.factor]}: ${f.strength.replace(/_/g, " ")}`}
             >
               {!cfg.dashed && (
                 <div
-                  className={`h-full rounded-r ${cfg.fillClass}`}
+                  className={`h-full rounded-full ${cfg.fillClass}`}
                   style={{ width: `${cfg.widthPct}%` }}
                 />
               )}

@@ -22,10 +22,10 @@ export function MarketSizeFunnel({ figures }: { figures: MarketSizeFigures }) {
         return (
           <div key={row.key} className="flex items-center gap-3">
             <span className="w-10 shrink-0 text-xs font-medium text-ink-600">{row.label}</span>
-            <div className="h-4 flex-1 rounded bg-ink-100">
-              <div className={`h-full rounded ${row.barClass}`} style={{ width: `${widthPct}%` }} />
+            <div className="h-3.5 flex-1 rounded-full bg-ink-100">
+              <div className={`h-full rounded-full ${row.barClass}`} style={{ width: `${widthPct}%` }} />
             </div>
-            <span className="w-16 shrink-0 text-right text-xs font-medium text-ink-900">
+            <span className="w-16 shrink-0 text-right font-mono text-xs font-semibold text-ink-900">
               {formatCompactMoney(value)}
             </span>
           </div>

@@ -46,7 +46,7 @@ export default function ChallengePage() {
     return (
       <div className="mx-auto max-w-xl space-y-8 py-8 text-center">
         <div>
-          <h1 className="text-4xl font-semibold tracking-tight text-ink-950">Give Aaran any startup.</h1>
+          <h1 className="text-4xl font-extrabold tracking-tight text-ink-950">Give Aaran any startup.</h1>
           <p className="mt-3 text-ink-500">
             A company name, a website, or what&apos;s on a pitch deck. Five minutes on the clock.
           </p>
@@ -54,7 +54,7 @@ export default function ChallengePage() {
 
         <div className="space-y-3 text-left">
           <input
-            className="w-full rounded-md border border-ink-200 bg-white px-4 py-3 text-center text-lg text-ink-900 placeholder:text-ink-300 focus:border-signal-600 focus:outline-none focus:ring-1 focus:ring-signal-600"
+            className="w-full rounded-full border border-ink-200 bg-white px-6 py-3.5 text-center text-lg text-ink-900 shadow-card placeholder:text-ink-300 focus:border-signal-600 focus:outline-none focus:ring-1 focus:ring-signal-600"
             placeholder="Company name or website"
             value={companyQuery}
             onChange={(e) => setCompanyQuery(e.target.value)}

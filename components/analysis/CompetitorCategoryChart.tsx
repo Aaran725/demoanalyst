@@ -25,13 +25,13 @@ export function CompetitorCategoryChart({ counts }: { counts: CompetitorCategory
         return (
           <div key={category} className="flex items-center gap-3">
             <span className="w-24 shrink-0 text-xs font-medium text-ink-600">{cfg.label}</span>
-            <div className="h-3 flex-1 rounded bg-ink-100">
+            <div className="h-2.5 flex-1 rounded-full bg-ink-100">
               <div
-                className={`h-full rounded ${cfg.barClass}`}
+                className={`h-full rounded-full ${cfg.barClass}`}
                 style={{ width: `${(count / max) * 100}%` }}
               />
             </div>
-            <span className="w-4 shrink-0 text-right text-xs font-medium text-ink-900">{count}</span>
+            <span className="w-4 shrink-0 text-right font-mono text-xs font-semibold text-ink-900">{count}</span>
           </div>
         );
       })}

@@ -1,4 +1,3 @@
-import { AlertTriangle, CheckCircle2, HelpCircle, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { EvidenceStatus } from "@/lib/ai/schemas";
 
@@ -7,45 +6,44 @@ import type { EvidenceStatus } from "@/lib/ai/schemas";
  * labels so the reader always knows whether they're looking at a verified
  * fact, the AI's own reasoning, an assumption the thesis depends on, or
  * something nobody could establish. See lib/ai/schemas.ts for the full
- * explanation of why this exists.
+ * explanation of why this exists. Colors are locked (verified_fact/
+ * ai_analysis/assumption/unknown map 1:1 to tailwind.config.ts's `evidence`
+ * scale) — only the pill+dot presentation below is up for redesign.
  */
-const CONFIG: Record<
-  EvidenceStatus,
-  { label: string; icon: typeof CheckCircle2; className: string }
-> = {
+const CONFIG: Record<EvidenceStatus, { label: string; className: string; dotClassName: string }> = {
   verified_fact: {
     label: "VERIFIED FACT",
-    icon: CheckCircle2,
     className: "bg-evidence-factBg text-evidence-fact",
+    dotClassName: "bg-evidence-fact",
   },
   ai_analysis: {
     label: "AI ANALYSIS",
-    icon: Sparkles,
     className: "bg-evidence-analysisBg text-evidence-analysis",
+    dotClassName: "bg-evidence-analysis",
   },
   assumption: {
     label: "ASSUMPTION",
-    icon: AlertTriangle,
     className: "bg-evidence-assumptionBg text-evidence-assumption",
+    dotClassName: "bg-evidence-assumption",
   },
   unknown: {
     label: "UNKNOWN",
-    icon: HelpCircle,
     className: "bg-evidence-unknownBg text-evidence-unknown",
+    dotClassName: "bg-evidence-unknown",
   },
 };
 
 export function EvidenceTag({ status, className }: { status: EvidenceStatus; className?: string }) {
-  const { label, icon: Icon, className: colorClass } = CONFIG[status];
+  const { label, className: colorClass, dotClassName } = CONFIG[status];
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-[10px] font-semibold tracking-wide",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10px] font-semibold tracking-wide",
         colorClass,
         className
       )}
     >
-      <Icon size={11} strokeWidth={2.5} />
+      <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", dotClassName)} />
       {label}
     </span>
   );
