@@ -89,7 +89,12 @@ export default function ChallengePage() {
         </div>
 
         {state.status === "loading" && (
-          <AnalysisProgress isDone={false} startedAt={state.startedAt} onCancel={cancel} />
+          <AnalysisProgress
+            isDone={false}
+            startedAt={state.startedAt}
+            currentStep={state.currentStep}
+            onCancel={cancel}
+          />
         )}
 
         {state.status === "cancelled" && (

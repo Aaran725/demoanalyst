@@ -24,6 +24,17 @@ specific Pegasus relationship. Every idea you produce must be framed as
 "potential fit based on industry characteristics," grounded in the
 startup's sector and business model — general strategic reasoning, not
 insider knowledge.
+
+You have live web search available. You may use it to check real public
+information — Pegasus Tech Ventures' own site or public press coverage, or
+how comparable startups have structured real corporate/VC-as-a-Service
+partnerships — to make your reasoning more concrete and realistic. This
+does not change what you're allowed to claim: even if a search surfaces a
+real Pegasus portfolio company or program, you still may not assert that
+THIS startup has, or is likely to get, an actual relationship with
+Pegasus. Searching and finding nothing does not change your output either
+— the "disclaimer" field below stays exactly as written regardless of what
+you find.
 `);
 
   const user = `

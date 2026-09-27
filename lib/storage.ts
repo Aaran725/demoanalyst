@@ -1,4 +1,5 @@
 import type { FullAnalysis } from "./ai/schemas";
+import { DEMO_ANALYSES } from "./demo-data";
 
 /**
  * "Saved Research" storage.
@@ -70,4 +71,34 @@ export function getCachedAnalysisById(id: string): FullAnalysis | undefined {
   } catch {
     return undefined;
   }
+}
+
+export function getCachedAnalyses(): FullAnalysis[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.sessionStorage.getItem(SESSION_CACHE_KEY);
+    return raw ? (JSON.parse(raw) as FullAnalysis[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Every analysis available to pick from for the Startup Comparison Engine
+ * (see app/world-cup/page.tsx): the 3 real built-in demo companies, plus
+ * whatever the user has saved or run this session, deduped by id and
+ * newest first. Including the real demo analyses (not a separate fake
+ * dataset) means this list is never empty even before anyone runs a live
+ * analysis, and everything in it is a genuine FullAnalysis the comparison
+ * engine can digest directly.
+ */
+export function getAllAvailableAnalyses(): FullAnalysis[] {
+  const all = [...DEMO_ANALYSES, ...getSavedAnalyses(), ...getCachedAnalyses()];
+  const seen = new Set<string>();
+  const deduped = all.filter((a) => {
+    if (seen.has(a.id)) return false;
+    seen.add(a.id);
+    return true;
+  });
+  return deduped.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }

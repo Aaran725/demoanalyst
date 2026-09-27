@@ -1,6 +1,6 @@
 import type { AIProvider } from "./provider";
 import type { ProgressStep } from "./progress";
-import { callAgent } from "./callAgent";
+import { callAgent, type AgentTraceInfo } from "./callAgent";
 import {
   startupInputSchema,
   startupSnapshotSchema,
@@ -21,6 +21,7 @@ import {
   icMemoSchema,
   type StartupInput,
   type FullAnalysis,
+  type AgentTraceEntry,
 } from "./schemas";
 import { buildResearchPrompt } from "./prompts/research";
 import { buildMarketPrompt } from "./prompts/market";
@@ -67,6 +68,14 @@ export async function runAnalysisPipeline(
 ): Promise<FullAnalysis> {
   const input: StartupInput = startupInputSchema.parse(rawInput);
 
+  // Real per-agent timing/web-search instrumentation for the Agent Trace
+  // panel (components/analysis/AgentTracePanel.tsx) — see AgentTraceInfo in
+  // callAgent.ts. Collected locally rather than threaded through onProgress
+  // since it's meant to be inspected after the fact, not streamed live.
+  const traces: AgentTraceEntry[] = [];
+  const recordTrace = (round: number) => (t: AgentTraceInfo) =>
+    traces.push({ ...t, round, usedWebSearch: t.webSearchCount > 0 });
+
   onProgress?.("researching");
   const researchPrompt = buildResearchPrompt(input);
   const snapshot = await callAgent(
@@ -76,7 +85,8 @@ export async function runAnalysisPipeline(
     researchPrompt.system,
     researchPrompt.user,
     signal,
-    true
+    true,
+    recordTrace(1)
   );
 
   [
@@ -91,22 +101,50 @@ export async function runAnalysisPipeline(
   ].forEach((s) => onProgress?.(s as ProgressStep));
   const [market, product, businessModel, traction, competitors, founders, pegasusFit, japan] =
     await Promise.all([
-      runStep(provider, "MarketAgent", marketIntelligenceSchema, buildMarketPrompt(input, snapshot), signal),
-      runStep(provider, "ProductAgent", productAnalysisSchema, buildProductPrompt(input, snapshot), signal),
+      runStep(
+        provider,
+        "MarketAgent",
+        marketIntelligenceSchema,
+        buildMarketPrompt(input, snapshot),
+        signal,
+        undefined,
+        recordTrace(2)
+      ),
+      runStep(
+        provider,
+        "ProductAgent",
+        productAnalysisSchema,
+        buildProductPrompt(input, snapshot),
+        signal,
+        undefined,
+        recordTrace(2)
+      ),
       runStep(
         provider,
         "BusinessModelAgent",
         businessModelSchema,
         buildBusinessModelPrompt(input, snapshot),
-        signal
+        signal,
+        undefined,
+        recordTrace(2)
       ),
-      runStep(provider, "TractionAgent", tractionSchema, buildTractionPrompt(input, snapshot), signal, true),
+      runStep(
+        provider,
+        "TractionAgent",
+        tractionSchema,
+        buildTractionPrompt(input, snapshot),
+        signal,
+        true,
+        recordTrace(2)
+      ),
       runStep(
         provider,
         "CompetitionAgent",
         competitorMapSchema,
         buildCompetitionPrompt(input, snapshot),
-        signal
+        signal,
+        undefined,
+        recordTrace(2)
       ),
       runStep(
         provider,
@@ -114,10 +152,27 @@ export async function runAnalysisPipeline(
         founderAnalysisSchema,
         buildFounderPrompt(input, snapshot),
         signal,
-        true
+        true,
+        recordTrace(2)
       ),
-      runStep(provider, "PegasusFitAgent", pegasusFitSchema, buildPegasusFitPrompt(input, snapshot), signal),
-      runStep(provider, "JapanAgent", japanOpportunitySchema, buildJapanPrompt(input, snapshot), signal),
+      runStep(
+        provider,
+        "PegasusFitAgent",
+        pegasusFitSchema,
+        buildPegasusFitPrompt(input, snapshot),
+        signal,
+        true,
+        recordTrace(2)
+      ),
+      runStep(
+        provider,
+        "JapanAgent",
+        japanOpportunitySchema,
+        buildJapanPrompt(input, snapshot),
+        signal,
+        true,
+        recordTrace(2)
+      ),
     ]);
 
   ["moat", "strategic_fit", "devils_advocate"].forEach((s) => onProgress?.(s as ProgressStep));
@@ -127,21 +182,27 @@ export async function runAnalysisPipeline(
       "MoatAgent",
       competitiveMoatSchema,
       buildMoatPrompt(input, snapshot, product, competitors),
-      signal
+      signal,
+      undefined,
+      recordTrace(3)
     ),
     runStep(
       provider,
       "StrategicFitAgent",
       strategicFitSchema,
       buildStrategicFitPrompt(input, snapshot, market),
-      signal
+      signal,
+      undefined,
+      recordTrace(3)
     ),
     runStep(
       provider,
       "DevilsAdvocateAgent",
       devilsAdvocateSchema,
       buildDevilsAdvocatePrompt(input, snapshot, market, competitors),
-      signal
+      signal,
+      undefined,
+      recordTrace(3)
     ),
   ]);
 
@@ -156,7 +217,9 @@ export async function runAnalysisPipeline(
     "DiligenceAgent",
     diligenceSchema,
     buildDiligencePrompt(input, snapshot, businessModel, traction, competitors, devilsAdvocate),
-    signal
+    signal,
+    undefined,
+    recordTrace(4)
   );
 
   const analysisSoFar = {
@@ -187,7 +250,9 @@ export async function runAnalysisPipeline(
       sources: icMemoSchema.shape.sources,
     }),
     buildMemoPrompt(input, analysisSoFar),
-    signal
+    signal,
+    undefined,
+    recordTrace(4)
   );
 
   onProgress?.("done");
@@ -202,6 +267,7 @@ export async function runAnalysisPipeline(
       ...memoOutput,
       generatedAt: new Date().toISOString(),
     },
+    agentTrace: traces,
   };
 }
 
@@ -212,7 +278,8 @@ function runStep<T>(
   schema: z.ZodType<T>,
   prompt: { system: string; user: string },
   signal?: AbortSignal,
-  enableWebSearch?: boolean
+  enableWebSearch?: boolean,
+  onTrace?: (info: AgentTraceInfo) => void
 ): Promise<T> {
-  return callAgent(provider, agentName, schema, prompt.system, prompt.user, signal, enableWebSearch);
+  return callAgent(provider, agentName, schema, prompt.system, prompt.user, signal, enableWebSearch, onTrace);
 }

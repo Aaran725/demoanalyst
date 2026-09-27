@@ -20,6 +20,7 @@ import { FounderQuestionsSection } from "./sections/FounderQuestionsSection";
 import { DiligenceSection } from "./sections/DiligenceSection";
 import { ICMemoView } from "./ICMemoView";
 import { EvidenceEngineChart } from "./EvidenceEngineChart";
+import { AgentTracePanel } from "./AgentTracePanel";
 import { computeEvidenceBreakdown } from "@/lib/analysis-stats";
 
 const TABS = [
@@ -55,6 +56,7 @@ export function AnalysisView({ analysis }: { analysis: FullAnalysis }) {
       </div>
 
       <EvidenceEngineChart breakdown={computeEvidenceBreakdown(analysis)} />
+      {analysis.agentTrace && <AgentTracePanel trace={analysis.agentTrace} />}
 
       <Tabs defaultValue="snapshot">
         <TabsList>
@@ -75,7 +77,7 @@ export function AnalysisView({ analysis }: { analysis: FullAnalysis }) {
         <TabsContent value="founders"><FoundersSection founders={analysis.founders} /></TabsContent>
         <TabsContent value="strategic-fit"><StrategicFitSection strategicFit={analysis.strategicFit} /></TabsContent>
         <TabsContent value="pegasus-fit"><PegasusFitSection pegasusFit={analysis.pegasusFit} /></TabsContent>
-        <TabsContent value="japan"><JapanSection japan={analysis.japan} /></TabsContent>
+        <TabsContent value="japan"><JapanSection japan={analysis.japan} input={analysis.input} snapshot={analysis.snapshot} /></TabsContent>
         <TabsContent value="devils-advocate"><DevilsAdvocateSection devilsAdvocate={analysis.devilsAdvocate} /></TabsContent>
         <TabsContent value="critical-questions"><CriticalQuestionsSection criticalQuestions={analysis.criticalQuestions} /></TabsContent>
         <TabsContent value="founder-questions"><FounderQuestionsSection founderQuestions={analysis.founderQuestions} /></TabsContent>

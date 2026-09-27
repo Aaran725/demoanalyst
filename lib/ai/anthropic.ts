@@ -64,10 +64,11 @@ export function createAnthropicProvider(): AIProvider {
       if (!combinedText) {
         throw new Error("Claude returned no text content.");
       }
-      if (response.usage.server_tool_use?.web_search_requests) {
-        console.log(`[web_search] ${response.usage.server_tool_use.web_search_requests} search(es) run`);
+      const webSearchCount = response.usage.server_tool_use?.web_search_requests ?? 0;
+      if (webSearchCount) {
+        console.log(`[web_search] ${webSearchCount} search(es) run`);
       }
-      return combinedText;
+      return { text: combinedText, meta: { webSearchCount } };
     },
   };
 }

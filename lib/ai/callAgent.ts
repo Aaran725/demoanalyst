@@ -22,6 +22,14 @@ function extractJson(text: string): string {
   return candidate.slice(start, end + 1);
 }
 
+/** One entry in a completed analysis's Agent Trace panel — see AgentTracePanel.tsx. */
+export interface AgentTraceInfo {
+  agentName: string;
+  durationMs: number;
+  attempts: number;
+  webSearchCount: number;
+}
+
 /**
  * Calls one AI agent and validates its output against a Zod schema.
  *
@@ -30,6 +38,11 @@ function extractJson(text: string): string {
  * and ask it to fix itself. If it still fails, we throw an AgentError
  * instead of showing broken data — the caller (orchestrator) decides how
  * to surface that to the user.
+ *
+ * `onTrace` is optional and purely additive: it fires once, only on
+ * success, with real timing/search-usage instrumentation for the Agent
+ * Trace panel. A failed call never produces a trace entry — Promise.all
+ * rejection aborts the whole pipeline anyway, so there's nothing to show.
  */
 export async function callAgent<T>(
   provider: AIProvider,
@@ -38,9 +51,12 @@ export async function callAgent<T>(
   system: string,
   user: string,
   signal?: AbortSignal,
-  enableWebSearch?: boolean
+  enableWebSearch?: boolean,
+  onTrace?: (info: AgentTraceInfo) => void
 ): Promise<T> {
+  const startedAt = Date.now();
   let lastError = "";
+  let webSearchCount = 0;
 
   for (let attempt = 0; attempt < 2; attempt++) {
     if (signal?.aborted) throw new DOMException("Analysis cancelled", "AbortError");
@@ -52,7 +68,9 @@ export async function callAgent<T>(
 
     let raw: string;
     try {
-      raw = await provider.complete({ system, user: prompt, signal, enableWebSearch });
+      const response = await provider.complete({ system, user: prompt, signal, enableWebSearch });
+      raw = response.text;
+      webSearchCount += response.meta.webSearchCount;
     } catch (err) {
       // Cancellation isn't a failure worth retrying — stop immediately so
       // we don't keep spending on an analysis nobody's waiting for anymore.
@@ -65,7 +83,10 @@ export async function callAgent<T>(
     try {
       const parsed = JSON.parse(jsonText);
       const result = schema.safeParse(parsed);
-      if (result.success) return result.data;
+      if (result.success) {
+        onTrace?.({ agentName, durationMs: Date.now() - startedAt, attempts: attempt + 1, webSearchCount });
+        return result.data;
+      }
       lastError = result.error.issues
         .map((i) => `${i.path.join(".")}: ${i.message}`)
         .join("; ");

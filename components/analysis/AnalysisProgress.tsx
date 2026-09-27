@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, Check, X } from "lucide-react";
-import { PROGRESS_STEPS, PROGRESS_LABELS } from "@/lib/ai/progress";
+import { PROGRESS_STEPS, PROGRESS_LABELS, PROGRESS_ROUND } from "@/lib/ai/progress";
+import type { ProgressStep } from "@/lib/ai/progress";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -16,28 +17,34 @@ function formatElapsed(ms: number): string {
 /**
  * The "Researching company... Understanding product..." progress screen.
  *
- * We don't have a live event stream from the server (the API route runs the
- * whole pipeline and returns one JSON response — see docs/ARCHITECTURE.md
- * for why we chose that trade-off), so the step list cycles visually while
- * the request is in flight, then snaps to "done" the moment the response
- * actually arrives. It never claims a step is finished before the real
- * analysis is finished — it's a waiting indicator, not a fabricated result.
+ * `currentStep` comes from a real, streamed event sent by the server the
+ * instant each pipeline round actually starts (see app/api/analyze/route.ts
+ * and lib/useAnalyze.ts) — this is genuine pipeline state, not a simulation.
  *
- * What IS always real and live: the elapsed-time counter below. It proves
- * the page hasn't frozen, and past a certain point it tells you plainly
- * that something's unusual — with a Cancel button that genuinely stops the
- * in-flight API calls (see lib/useAnalyze.ts), not just the browser's wait.
+ * The pipeline runs several agents in parallel per round (see
+ * lib/ai/orchestrator.ts), and the server announces a whole round's step
+ * names together, right as that round starts — before any of them have
+ * actually finished. So a step is only ever shown as complete once a LATER
+ * round has started (proving the earlier round's Promise.all resolved);
+ * every step in the round matching `currentStep` is shown as active
+ * (in-flight), never as already done. See lib/ai/progress.ts's
+ * PROGRESS_ROUND for the round each step belongs to.
+ *
+ * What's always real and live regardless of streaming: the elapsed-time
+ * counter below, with a Cancel button that genuinely stops the in-flight
+ * API calls (see lib/useAnalyze.ts), not just the browser's wait.
  */
 export function AnalysisProgress({
   isDone,
   startedAt,
+  currentStep,
   onCancel,
 }: {
   isDone: boolean;
   startedAt: number;
+  currentStep?: ProgressStep;
   onCancel?: () => void;
 }) {
-  const [activeIndex, setActiveIndex] = useState(0);
   const [elapsedMs, setElapsedMs] = useState(() => Date.now() - startedAt);
 
   useEffect(() => {
@@ -46,15 +53,8 @@ export function AnalysisProgress({
     return () => clearInterval(interval);
   }, [isDone, startedAt]);
 
-  useEffect(() => {
-    if (isDone) return;
-    const interval = setInterval(() => {
-      setActiveIndex((i) => Math.min(i + 1, PROGRESS_STEPS.length - 1));
-    }, 900);
-    return () => clearInterval(interval);
-  }, [isDone]);
-
   const elapsedSeconds = Math.floor(elapsedMs / 1000);
+  const currentRound = currentStep ? PROGRESS_ROUND[currentStep] : 0;
 
   return (
     <div className="mx-auto max-w-md py-16">
@@ -75,9 +75,9 @@ export function AnalysisProgress({
         </div>
 
         <div className="space-y-1 border-t border-ink-100 pt-4">
-          {PROGRESS_STEPS.map((step, i) => {
-            const isComplete = isDone || i < activeIndex;
-            const isActive = !isDone && i === activeIndex;
+          {PROGRESS_STEPS.map((step) => {
+            const isComplete = isDone || PROGRESS_ROUND[step] < currentRound;
+            const isActive = !isDone && PROGRESS_ROUND[step] === currentRound;
             return (
               <div key={step} className="flex items-center gap-3 py-1.5">
                 {isComplete ? (

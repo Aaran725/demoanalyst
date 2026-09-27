@@ -71,7 +71,7 @@ export function ChallengeResults({ analysis }: { analysis: FullAnalysis }) {
 
       <CompetitorsSection competitors={analysis.competitors} />
       <StrategicFitSection strategicFit={analysis.strategicFit} />
-      <JapanSection japan={analysis.japan} />
+      <JapanSection japan={analysis.japan} input={analysis.input} snapshot={analysis.snapshot} />
       <DevilsAdvocateSection devilsAdvocate={analysis.devilsAdvocate} />
       <CriticalQuestionsSection criticalQuestions={analysis.criticalQuestions} />
       <FounderQuestionsSection founderQuestions={analysis.founderQuestions} />

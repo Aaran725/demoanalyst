@@ -307,6 +307,32 @@ export const japanOpportunitySchema = z.object({
 export type JapanOpportunity = z.infer<typeof japanOpportunitySchema>;
 
 // ---------------------------------------------------------------------------
+// 11b. Market Entry Engine — an on-demand, user-triggered generalization of
+// the Japan Opportunity Engine above for any market Anis (or anyone) wants
+// to ask about. Field-for-field identical to japanOpportunitySchema except
+// parameterized on `market` — reuses japanPhaseSchema directly so
+// JapanEntryStepper.tsx needs no changes to render either one.
+// ---------------------------------------------------------------------------
+
+export const marketEntryOpportunitySchema = z.object({
+  market: z.string(),
+  couldEnterMarket: z.string(),
+  beneficiaryIndustries: z.array(z.string()),
+  potentialEnterpriseCustomers: z.array(z.string()),
+  potentialStrategicPartners: z.array(z.string()),
+  localizationRequirements: z.array(z.string()),
+  regulatoryRequirements: z.array(z.string()),
+  distributionConsiderations: z.string(),
+  pricingConsiderations: z.string(),
+  enterpriseSalesConsiderations: z.string(),
+  languageConsiderations: z.string(),
+  technologyIntegrationConsiderations: z.string(),
+  localCompetition: z.array(z.string()),
+  entryStrategy: z.array(japanPhaseSchema).length(5),
+});
+export type MarketEntryOpportunity = z.infer<typeof marketEntryOpportunitySchema>;
+
+// ---------------------------------------------------------------------------
 // 12. Devil's Advocate
 // ---------------------------------------------------------------------------
 
@@ -418,6 +444,87 @@ export const comparisonResultSchema = z.object({
 });
 export type ComparisonResult = z.infer<typeof comparisonResultSchema>;
 
+// ---------------------------------------------------------------------------
+// Startup Comparison Engine (World Cup Scout) — compares 2-4 of the user's
+// own real, already-researched companies. Unrelated to comparisonResultSchema
+// above, which powers "Ask Aaran First" (human answer vs. AI finding).
+//
+// comparisonDigestSchema is built CLIENT-SIDE from a full FullAnalysis (see
+// lib/ai/prompts/comparisonDigest.ts) so only this small digest — never the
+// full analysis — goes over the wire to /api/compare-startups.
+//
+// startupComparisonSchema has NO numeric field anywhere: a ranking, score,
+// or "winner" is structurally impossible to express here, not just
+// discouraged by prompt wording (see lib/ai/prompts/startupComparison.ts).
+// ---------------------------------------------------------------------------
+
+export const comparisonDigestSchema = z.object({
+  id: z.string(),
+  company: z.object({ name: z.string(), sector: z.string(), stage: z.string() }),
+  evidence: z.object({
+    counts: z.object({
+      verified_fact: z.number(),
+      ai_analysis: z.number(),
+      assumption: z.number(),
+      unknown: z.number(),
+    }),
+    total: z.number(),
+  }),
+  moatCounts: z.object({
+    strong_evidence: z.number(),
+    some_evidence: z.number(),
+    weak_evidence: z.number(),
+    unknown: z.number(),
+  }),
+  competitorCounts: z.object({
+    direct: z.number(),
+    indirect: z.number(),
+    incumbent: z.number(),
+    emerging: z.number(),
+  }),
+  traction: z.object({
+    revenue: z.string(),
+    arr: z.string(),
+    growth: z.string(),
+    customers: z.string(),
+    signals: z.array(z.string()),
+  }),
+  topRisks: z.array(z.string()),
+  strategicFit: z.object({ count: z.number(), topConfidence: confidenceSchema.nullable() }),
+});
+export type ComparisonDigest = z.infer<typeof comparisonDigestSchema>;
+
+export const startupComparisonDimensionSchema = z.object({
+  dimension: z.string(),
+  perCompany: z.array(z.object({ companyId: z.string(), summary: z.string() })),
+});
+
+export const startupComparisonSchema = z.object({
+  companies: z.array(z.object({ id: z.string(), name: z.string() })),
+  dimensions: z.array(startupComparisonDimensionSchema),
+  keyDifferentiators: z.array(z.string()),
+  openQuestions: z.array(z.string()),
+  disclaimer: z.string(),
+});
+export type StartupComparison = z.infer<typeof startupComparisonSchema>;
+
+// ---------------------------------------------------------------------------
+// Agent Trace — real per-agent instrumentation (timing, retries, web search
+// usage) surfaced in the "under the hood" panel (components/analysis/
+// AgentTracePanel.tsx). Deliberately has no `text`/`status` fields, so
+// lib/analysis-stats.ts's claim-walker never mistakes an entry for a Claim.
+// ---------------------------------------------------------------------------
+
+export const agentTraceEntrySchema = z.object({
+  agentName: z.string(),
+  round: z.number(),
+  durationMs: z.number(),
+  attempts: z.number(),
+  usedWebSearch: z.boolean(),
+  webSearchCount: z.number(),
+});
+export type AgentTraceEntry = z.infer<typeof agentTraceEntrySchema>;
+
 export const fullAnalysisSchema = z.object({
   id: z.string(),
   input: startupInputSchema,
@@ -439,5 +546,6 @@ export const fullAnalysisSchema = z.object({
   founderQuestions: founderQuestionsSchema,
   nextDiligence: nextDiligenceSchema,
   icMemo: icMemoSchema.optional(),
+  agentTrace: z.array(agentTraceEntrySchema).optional(),
 });
 export type FullAnalysis = z.infer<typeof fullAnalysisSchema>;

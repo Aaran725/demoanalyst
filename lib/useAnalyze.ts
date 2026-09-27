@@ -2,11 +2,13 @@
 
 import { useState, useCallback, useRef } from "react";
 import type { FullAnalysis, StartupInput } from "./ai/schemas";
+import type { ProgressStep } from "./ai/progress";
+import type { AnalyzeStreamEvent } from "./ai/streamEvents";
 import { cacheAnalysis } from "./storage";
 
 type AnalyzeState =
   | { status: "idle" }
-  | { status: "loading"; startedAt: number }
+  | { status: "loading"; startedAt: number; currentStep?: ProgressStep }
   | { status: "success"; analysis: FullAnalysis; notice?: string }
   | { status: "error"; error: string; demoFallback?: FullAnalysis }
   | { status: "cancelled" };
@@ -37,20 +39,36 @@ export function useAnalyze() {
         body: JSON.stringify(input),
         signal: controller.signal,
       });
-      const data = await res.json();
+      if (!res.body) throw new Error("No response body from analysis service.");
 
-      if (data.mode === "cancelled") {
-        setState({ status: "cancelled" });
-        return;
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = buffer.indexOf("\n")) >= 0) {
+          const line = buffer.slice(0, newlineIndex).trim();
+          buffer = buffer.slice(newlineIndex + 1);
+          if (!line) continue;
+
+          const event: AnalyzeStreamEvent = JSON.parse(line);
+          if (event.type === "progress") {
+            setState((s) => (s.status === "loading" ? { ...s, currentStep: event.step } : s));
+          } else if (event.type === "done") {
+            cacheAnalysis(event.analysis);
+            setState({ status: "success", analysis: event.analysis, notice: event.notice });
+          } else if (event.type === "error") {
+            setState({ status: "error", error: event.error, demoFallback: event.demoFallback });
+          } else if (event.type === "cancelled") {
+            setState({ status: "cancelled" });
+          }
+        }
       }
-
-      if (data.mode === "error") {
-        setState({ status: "error", error: data.error, demoFallback: data.demoFallback });
-        return;
-      }
-
-      cacheAnalysis(data.analysis);
-      setState({ status: "success", analysis: data.analysis, notice: data.notice });
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
         setState({ status: "cancelled" });

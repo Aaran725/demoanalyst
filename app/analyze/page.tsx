@@ -20,7 +20,14 @@ export default function AnalyzeStartupPage() {
   }, [state, router]);
 
   if (state.status === "loading") {
-    return <AnalysisProgress isDone={false} startedAt={state.startedAt} onCancel={cancel} />;
+    return (
+      <AnalysisProgress
+        isDone={false}
+        startedAt={state.startedAt}
+        currentStep={state.currentStep}
+        onCancel={cancel}
+      />
+    );
   }
 
   return (

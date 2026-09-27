@@ -15,6 +15,16 @@ Pilot, Phase 3 Strategic Partner, Phase 4 Enterprise Deployment, Phase 5
 Scale. Clearly this is AI-generated strategic reasoning, not confirmed
 market research — do not claim specific Japanese companies have interest
 unless you have real evidence.
+
+You have live web search available. You may use it to ground this reasoning
+in real facts — comparable companies' real Japan market entries, the actual
+regulators or industry associations relevant to this sector, real
+distribution or localization norms — rather than reasoning from general
+knowledge alone. This does not relax the rule above: only name a specific
+Japanese company as interested or engaged if you found a real, citable
+source saying so. Whether or not your searches turn up anything, this
+output is still AI-generated strategic reasoning, not confirmed market
+research.
 `);
 
   const user = `
