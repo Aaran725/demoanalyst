@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { AIProvider } from "./provider";
+import { CORE_RULES } from "./prompts/shared";
 
 /**
  * Anthropic (Claude) implementation of AIProvider.
@@ -21,6 +22,23 @@ export function createAnthropicProvider(): AIProvider {
   return {
     name: "anthropic",
     async complete({ system, user, signal, enableWebSearch }) {
+      // Every one of this app's ~15 agent calls builds its system prompt via
+      // buildSystemPrompt() (lib/ai/prompts/shared.ts), which always starts
+      // with the same, large, byte-identical CORE_RULES block. Splitting
+      // that shared prefix into its own cached content block means the
+      // cache written by the FIRST call in a pipeline run (ResearchAgent)
+      // is reused by every later call in that same run (well within the
+      // ephemeral cache's ~5-minute TTL) — real cost and latency savings
+      // with zero effect on what any agent is asked. Falls back to sending
+      // `system` uncached if it doesn't start with CORE_RULES (e.g. a
+      // future prompt not built via buildSystemPrompt).
+      const systemParam = system.startsWith(CORE_RULES)
+        ? [
+            { type: "text" as const, text: CORE_RULES, cache_control: { type: "ephemeral" as const } },
+            { type: "text" as const, text: system.slice(CORE_RULES.length) },
+          ]
+        : system;
+
       const response = await client.messages.create(
         {
           model,
@@ -30,7 +48,7 @@ export function createAnthropicProvider(): AIProvider {
           // extended thinking (on by default on this model) only adds latency
           // and cost without improving output quality. Turned off for speed.
           thinking: { type: "disabled" },
-          system,
+          system: systemParam,
           messages: [{ role: "user", content: user }],
           // Claude's own hosted web search — no separate API key, billed
           // through ANTHROPIC_API_KEY above. Only a few agents ask for this
@@ -78,6 +96,11 @@ export function createAnthropicProvider(): AIProvider {
       const webSearchCount = response.usage.server_tool_use?.web_search_requests ?? 0;
       if (webSearchCount) {
         console.log(`[web_search] ${webSearchCount} search(es) run`);
+      }
+      const cacheRead = response.usage.cache_read_input_tokens ?? 0;
+      const cacheCreated = response.usage.cache_creation_input_tokens ?? 0;
+      if (cacheRead || cacheCreated) {
+        console.log(`[cache] read ${cacheRead} tokens, wrote ${cacheCreated} tokens`);
       }
       return { text: combinedText, meta: { webSearchCount } };
     },

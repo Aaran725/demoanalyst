@@ -45,19 +45,33 @@ import { z } from "zod";
  * Conceptually the 14 agents run one after another (see docs/AI_AGENTS.md
  * for the full diagram). In practice, many of them only need the same
  * up-front research and don't depend on each other, so we run those in
- * parallel batches — this keeps a real Claude-backed analysis to roughly
- * 4 network round-trips deep instead of 14, which matters a lot for a live
- * demo with a five-minute clock running.
+ * parallel — this keeps a real Claude-backed analysis far shallower than
+ * 14 network round-trips deep, which matters a lot for a live demo.
  *
  *   Round 1: ResearchAgent (everything else needs this first)
  *   Round 2: MarketAgent, ProductAgent, BusinessModelAgent, TractionAgent,
  *            CompetitionAgent, FounderAgent, PegasusFitAgent, JapanAgent
- *            (all just need Round 1's output — Pegasus/Japan only ever
- *            needed the snapshot, so there's no reason to make them wait
- *            behind Round 2 the way they used to)
+ *            (all just need Round 1's output)
  *   Round 3: MoatAgent, StrategicFitAgent, DevilsAdvocateAgent
- *            (the only agents that actually need Round 2's output)
+ *            (need Round 2's output — but NOT all of it, see below)
  *   Round 4: DiligenceAgent, then MemoAgent (need everything)
+ *
+ * Below, each Round 3/4 agent is wired to await only the SPECIFIC Round 2/3
+ * promises it actually reads (per its own prompt-builder's parameters),
+ * not a blanket "wait for the whole round" barrier. StrategicFitAgent only
+ * reads `market`; MoatAgent only reads `product`+`competitors`;
+ * DevilsAdvocateAgent only reads `market`+`competitors` — none of them use
+ * `businessModel`, `traction`, `founders`, `pegasusFit`, or `japan`, so
+ * there's no reason for them to wait on whichever of those 5 happens to be
+ * slowest. Likewise DiligenceAgent reads `businessModel`, `traction`,
+ * `competitors`, `devilsAdvocate` — never `moat` or `strategicFit` — so it
+ * shouldn't wait for those either. This is pure waste elimination: it
+ * changes when a call fires, never what any agent is asked or how it
+ * reasons, so it carries no quality risk. (Trade-off, accepted: if one
+ * agent fails, e.g. FounderAgent, other agents that don't depend on it
+ * still run to completion before the final Promise.all surfaces the
+ * failure — slightly more wasted spend in that rare case, in exchange for
+ * real parallelism on every successful run.)
  */
 
 export async function runAnalysisPipeline(
@@ -89,6 +103,88 @@ export async function runAnalysisPipeline(
     recordTrace(1)
   );
 
+  // Round 2 — kick off all 8 immediately. `runStep`/`callAgent` start the
+  // actual network request the instant they're called (a JS Promise is
+  // eager), so these fire concurrently right here, before anything below
+  // ever awaits them.
+  const marketPromise = runStep(
+    provider,
+    "MarketAgent",
+    marketIntelligenceSchema,
+    buildMarketPrompt(input, snapshot),
+    signal,
+    undefined,
+    recordTrace(2)
+  );
+  const productPromise = runStep(
+    provider,
+    "ProductAgent",
+    productAnalysisSchema,
+    buildProductPrompt(input, snapshot),
+    signal,
+    undefined,
+    recordTrace(2)
+  );
+  const businessModelPromise = runStep(
+    provider,
+    "BusinessModelAgent",
+    businessModelSchema,
+    buildBusinessModelPrompt(input, snapshot),
+    signal,
+    undefined,
+    recordTrace(2)
+  );
+  const tractionPromise = runStep(
+    provider,
+    "TractionAgent",
+    tractionSchema,
+    buildTractionPrompt(input, snapshot),
+    signal,
+    // TractionAgent has to verify ~10 distinct financial/usage metrics
+    // (revenue, ARR, growth, customers, users, retention, partnerships,
+    // funding, product adoption, international expansion) — the default
+    // 4-search budget (see anthropic.ts) isn't enough to run a separate
+    // targeted search per metric, which was leaving genuinely-findable
+    // figures marked "unknown" just because the searches ran out.
+    8,
+    recordTrace(2)
+  );
+  const competitorsPromise = runStep(
+    provider,
+    "CompetitionAgent",
+    competitorMapSchema,
+    buildCompetitionPrompt(input, snapshot),
+    signal,
+    undefined,
+    recordTrace(2)
+  );
+  const foundersPromise = runStep(
+    provider,
+    "FounderAgent",
+    founderAnalysisSchema,
+    buildFounderPrompt(input, snapshot),
+    signal,
+    true,
+    recordTrace(2)
+  );
+  const pegasusFitPromise = runStep(
+    provider,
+    "PegasusFitAgent",
+    pegasusFitSchema,
+    buildPegasusFitPrompt(input, snapshot),
+    signal,
+    true,
+    recordTrace(2)
+  );
+  const japanPromise = runStep(
+    provider,
+    "JapanAgent",
+    japanOpportunitySchema,
+    buildJapanPrompt(input, snapshot),
+    signal,
+    true,
+    recordTrace(2)
+  );
   [
     "product",
     "market",
@@ -99,91 +195,14 @@ export async function runAnalysisPipeline(
     "pegasus_fit",
     "japan",
   ].forEach((s) => onProgress?.(s as ProgressStep));
-  const [market, product, businessModel, traction, competitors, founders, pegasusFit, japan] =
-    await Promise.all([
-      runStep(
-        provider,
-        "MarketAgent",
-        marketIntelligenceSchema,
-        buildMarketPrompt(input, snapshot),
-        signal,
-        undefined,
-        recordTrace(2)
-      ),
-      runStep(
-        provider,
-        "ProductAgent",
-        productAnalysisSchema,
-        buildProductPrompt(input, snapshot),
-        signal,
-        undefined,
-        recordTrace(2)
-      ),
-      runStep(
-        provider,
-        "BusinessModelAgent",
-        businessModelSchema,
-        buildBusinessModelPrompt(input, snapshot),
-        signal,
-        undefined,
-        recordTrace(2)
-      ),
-      runStep(
-        provider,
-        "TractionAgent",
-        tractionSchema,
-        buildTractionPrompt(input, snapshot),
-        signal,
-        // TractionAgent has to verify ~10 distinct financial/usage metrics
-        // (revenue, ARR, growth, customers, users, retention, partnerships,
-        // funding, product adoption, international expansion) — the default
-        // 4-search budget (see anthropic.ts) isn't enough to run a separate
-        // targeted search per metric, which was leaving genuinely-findable
-        // figures marked "unknown" just because the searches ran out.
-        8,
-        recordTrace(2)
-      ),
-      runStep(
-        provider,
-        "CompetitionAgent",
-        competitorMapSchema,
-        buildCompetitionPrompt(input, snapshot),
-        signal,
-        undefined,
-        recordTrace(2)
-      ),
-      runStep(
-        provider,
-        "FounderAgent",
-        founderAnalysisSchema,
-        buildFounderPrompt(input, snapshot),
-        signal,
-        true,
-        recordTrace(2)
-      ),
-      runStep(
-        provider,
-        "PegasusFitAgent",
-        pegasusFitSchema,
-        buildPegasusFitPrompt(input, snapshot),
-        signal,
-        true,
-        recordTrace(2)
-      ),
-      runStep(
-        provider,
-        "JapanAgent",
-        japanOpportunitySchema,
-        buildJapanPrompt(input, snapshot),
-        signal,
-        true,
-        recordTrace(2)
-      ),
-    ]);
 
-  ["moat", "strategic_fit", "devils_advocate"].forEach((s) => onProgress?.(s as ProgressStep));
-  const [moat, strategicFit, devilsAdvocate] = await Promise.all([
-    runStep(
+  // Round 3 — each agent awaits only ITS OWN real inputs (see the doc
+  // comment above), not the whole Round 2 batch. onProgress fires the
+  // instant each one's request actually starts, which is more accurate
+  // than announcing a whole round upfront.
+  const moatPromise = Promise.all([productPromise, competitorsPromise]).then(([product, competitors]) => {
+    onProgress?.("moat");
+    return runStep(
       provider,
       "MoatAgent",
       competitiveMoatSchema,
@@ -191,8 +210,11 @@ export async function runAnalysisPipeline(
       signal,
       undefined,
       recordTrace(3)
-    ),
-    runStep(
+    );
+  });
+  const strategicFitPromise = marketPromise.then((market) => {
+    onProgress?.("strategic_fit");
+    return runStep(
       provider,
       "StrategicFitAgent",
       strategicFitSchema,
@@ -200,8 +222,11 @@ export async function runAnalysisPipeline(
       signal,
       undefined,
       recordTrace(3)
-    ),
-    runStep(
+    );
+  });
+  const devilsAdvocatePromise = Promise.all([marketPromise, competitorsPromise]).then(([market, competitors]) => {
+    onProgress?.("devils_advocate");
+    return runStep(
       provider,
       "DevilsAdvocateAgent",
       devilsAdvocateSchema,
@@ -209,24 +234,52 @@ export async function runAnalysisPipeline(
       signal,
       undefined,
       recordTrace(3)
-    ),
-  ]);
+    );
+  });
 
-  onProgress?.("diligence");
+  // Round 4 (Diligence) — needs businessModel/traction/competitors +
+  // devilsAdvocate, NOT moat or strategicFit, so it starts as soon as
+  // those four are ready rather than waiting for all of Round 3.
   const diligenceSchema = z.object({
     criticalQuestions: criticalQuestionsSchema,
     founderQuestions: founderQuestionsSchema,
     nextDiligence: nextDiligenceSchema,
   });
-  const diligence = await runStep(
-    provider,
-    "DiligenceAgent",
-    diligenceSchema,
-    buildDiligencePrompt(input, snapshot, businessModel, traction, competitors, devilsAdvocate),
-    signal,
-    undefined,
-    recordTrace(4)
-  );
+  const diligencePromise = Promise.all([
+    businessModelPromise,
+    tractionPromise,
+    competitorsPromise,
+    devilsAdvocatePromise,
+  ]).then(([businessModel, traction, competitors, devilsAdvocate]) => {
+    onProgress?.("diligence");
+    return runStep(
+      provider,
+      "DiligenceAgent",
+      diligenceSchema,
+      buildDiligencePrompt(input, snapshot, businessModel, traction, competitors, devilsAdvocate),
+      signal,
+      undefined,
+      recordTrace(4)
+    );
+  });
+
+  // Resolve everything together — whatever the true last constraint turns
+  // out to be for this particular run, this is where it's actually awaited.
+  const [market, product, businessModel, traction, competitors, founders, pegasusFit, japan, moat, strategicFit, devilsAdvocate, diligence] =
+    await Promise.all([
+      marketPromise,
+      productPromise,
+      businessModelPromise,
+      tractionPromise,
+      competitorsPromise,
+      foundersPromise,
+      pegasusFitPromise,
+      japanPromise,
+      moatPromise,
+      strategicFitPromise,
+      devilsAdvocatePromise,
+      diligencePromise,
+    ]);
 
   const analysisSoFar = {
     snapshot,
