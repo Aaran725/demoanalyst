@@ -19,6 +19,8 @@ import { CriticalQuestionsSection } from "./sections/CriticalQuestionsSection";
 import { FounderQuestionsSection } from "./sections/FounderQuestionsSection";
 import { DiligenceSection } from "./sections/DiligenceSection";
 import { ICMemoView } from "./ICMemoView";
+import { EvidenceEngineChart } from "./EvidenceEngineChart";
+import { computeEvidenceBreakdown } from "@/lib/analysis-stats";
 
 const TABS = [
   { value: "snapshot", label: "Snapshot" },
@@ -51,6 +53,8 @@ export function AnalysisView({ analysis }: { analysis: FullAnalysis }) {
         </div>
         {analysis.isDemoData && <Badge variant="outline">DEMO DATA</Badge>}
       </div>
+
+      <EvidenceEngineChart breakdown={computeEvidenceBreakdown(analysis)} />
 
       <Tabs defaultValue="snapshot">
         <TabsList>

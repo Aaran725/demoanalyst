@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
-import { SectionShell } from "../SectionShell";
+import { SectionShell, SubHeading } from "../SectionShell";
+import { MoatStrengthChart } from "../MoatStrengthChart";
 import type { CompetitiveMoat, MoatFactor, MoatStrength } from "@/lib/ai/schemas";
 
 const FACTOR_LABEL: Record<MoatFactor["factor"], string> = {
@@ -29,6 +30,13 @@ export function MoatSection({ moat }: { moat: CompetitiveMoat }) {
       title="Competitive Moat"
       description="Evidence strength per factor — never a made-up numerical score."
     >
+      <Card>
+        <CardContent className="space-y-3 p-5">
+          <SubHeading>At a Glance</SubHeading>
+          <MoatStrengthChart factors={moat.factors} />
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 sm:grid-cols-2">
         {moat.factors.map((f) => {
           const cfg = STRENGTH_CONFIG[f.strength];

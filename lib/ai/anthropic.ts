@@ -20,7 +20,7 @@ export function createAnthropicProvider(): AIProvider {
 
   return {
     name: "anthropic",
-    async complete({ system, user, signal }) {
+    async complete({ system, user, signal, enableWebSearch }) {
       const response = await client.messages.create(
         {
           model,
@@ -32,15 +32,42 @@ export function createAnthropicProvider(): AIProvider {
           thinking: { type: "disabled" },
           system,
           messages: [{ role: "user", content: user }],
+          // Claude's own hosted web search — no separate API key, billed
+          // through ANTHROPIC_API_KEY above. Only a few agents ask for this
+          // (see orchestrator.ts) since it adds latency and cost per search.
+          ...(enableWebSearch
+            ? { tools: [{ type: "web_search_20260209" as const, name: "web_search" as const, max_uses: 4 }] }
+            : {}),
         },
         { signal }
       );
 
-      const textBlock = response.content.find((block) => block.type === "text");
-      if (!textBlock || textBlock.type !== "text") {
+      // With web search on, Claude's answer can be split across multiple
+      // text blocks interleaved with search-result blocks — grabbing only
+      // the first one (like this used to) would silently drop the rest of
+      // the JSON. Concatenate every text block in order instead; blocks only
+      // split where a tool call interrupts the stream, never mid-sentence,
+      // so plain concatenation reproduces the original text correctly.
+      let combinedText = "";
+      for (const block of response.content) {
+        if (block.type === "text") {
+          combinedText += block.text;
+        } else if (block.type === "web_search_tool_result") {
+          if (Array.isArray(block.content)) {
+            console.log(`[web_search] ${block.content.length} result(s) returned`);
+          } else {
+            console.warn(`[web_search] search error: ${block.content.error_code}`);
+          }
+        }
+      }
+
+      if (!combinedText) {
         throw new Error("Claude returned no text content.");
       }
-      return textBlock.text;
+      if (response.usage.server_tool_use?.web_search_requests) {
+        console.log(`[web_search] ${response.usage.server_tool_use.web_search_requests} search(es) run`);
+      }
+      return combinedText;
     },
   };
 }

@@ -45,6 +45,22 @@ const config: Config = {
           medium: "#a15c00",
           high: "#b3261e",
         },
+        // Chart-only colors, validated with the dataviz skill's palette
+        // checker (contrast, colorblind-safe separation, chroma floor).
+        // `chartUnknown` exists because evidence.unknown (#6b7180) is too
+        // low-chroma to work as a categorical chart color — it reads as
+        // "not a color" and sits too close to evidence.assumption for
+        // normal vision. Badges still use evidence.unknown; only charts use
+        // this. `competitor.*` is a separate categorical set so a chart
+        // never implies a false link between competitor type and evidence
+        // status by reusing the same colors for two unrelated things.
+        chartUnknown: "#38539f",
+        competitor: {
+          direct: "#1f5eff",
+          incumbent: "#b3261e",
+          indirect: "#0a8f7f",
+          emerging: "#6d4aa8",
+        },
       },
       fontFamily: {
         sans: ["var(--font-sans)", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],

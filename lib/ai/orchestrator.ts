@@ -50,10 +50,13 @@ import { z } from "zod";
  *
  *   Round 1: ResearchAgent (everything else needs this first)
  *   Round 2: MarketAgent, ProductAgent, BusinessModelAgent, TractionAgent,
- *            CompetitionAgent, FounderAgent  (all just need Round 1's output)
- *   Round 3: MoatAgent, StrategicFitAgent, PegasusFitAgent, JapanAgent,
- *            DevilsAdvocateAgent, DiligenceAgent (need Round 2's output)
- *   Round 4: MemoAgent (needs everything)
+ *            CompetitionAgent, FounderAgent, PegasusFitAgent, JapanAgent
+ *            (all just need Round 1's output — Pegasus/Japan only ever
+ *            needed the snapshot, so there's no reason to make them wait
+ *            behind Round 2 the way they used to)
+ *   Round 3: MoatAgent, StrategicFitAgent, DevilsAdvocateAgent
+ *            (the only agents that actually need Round 2's output)
+ *   Round 4: DiligenceAgent, then MemoAgent (need everything)
  */
 
 export async function runAnalysisPipeline(
@@ -72,37 +75,53 @@ export async function runAnalysisPipeline(
     startupSnapshotSchema,
     researchPrompt.system,
     researchPrompt.user,
-    signal
+    signal,
+    true
   );
 
-  ["product", "market", "business_model", "traction", "competitors", "founders"].forEach((s) =>
-    onProgress?.(s as ProgressStep)
-  );
-  const [market, product, businessModel, traction, competitors, founders] = await Promise.all([
-    runStep(provider, "MarketAgent", marketIntelligenceSchema, buildMarketPrompt(input, snapshot), signal),
-    runStep(provider, "ProductAgent", productAnalysisSchema, buildProductPrompt(input, snapshot), signal),
-    runStep(
-      provider,
-      "BusinessModelAgent",
-      businessModelSchema,
-      buildBusinessModelPrompt(input, snapshot),
-      signal
-    ),
-    runStep(provider, "TractionAgent", tractionSchema, buildTractionPrompt(input, snapshot), signal),
-    runStep(
-      provider,
-      "CompetitionAgent",
-      competitorMapSchema,
-      buildCompetitionPrompt(input, snapshot),
-      signal
-    ),
-    runStep(provider, "FounderAgent", founderAnalysisSchema, buildFounderPrompt(input, snapshot), signal),
-  ]);
+  [
+    "product",
+    "market",
+    "business_model",
+    "traction",
+    "competitors",
+    "founders",
+    "pegasus_fit",
+    "japan",
+  ].forEach((s) => onProgress?.(s as ProgressStep));
+  const [market, product, businessModel, traction, competitors, founders, pegasusFit, japan] =
+    await Promise.all([
+      runStep(provider, "MarketAgent", marketIntelligenceSchema, buildMarketPrompt(input, snapshot), signal),
+      runStep(provider, "ProductAgent", productAnalysisSchema, buildProductPrompt(input, snapshot), signal),
+      runStep(
+        provider,
+        "BusinessModelAgent",
+        businessModelSchema,
+        buildBusinessModelPrompt(input, snapshot),
+        signal
+      ),
+      runStep(provider, "TractionAgent", tractionSchema, buildTractionPrompt(input, snapshot), signal, true),
+      runStep(
+        provider,
+        "CompetitionAgent",
+        competitorMapSchema,
+        buildCompetitionPrompt(input, snapshot),
+        signal
+      ),
+      runStep(
+        provider,
+        "FounderAgent",
+        founderAnalysisSchema,
+        buildFounderPrompt(input, snapshot),
+        signal,
+        true
+      ),
+      runStep(provider, "PegasusFitAgent", pegasusFitSchema, buildPegasusFitPrompt(input, snapshot), signal),
+      runStep(provider, "JapanAgent", japanOpportunitySchema, buildJapanPrompt(input, snapshot), signal),
+    ]);
 
-  ["moat", "strategic_fit", "pegasus_fit", "japan", "devils_advocate"].forEach((s) =>
-    onProgress?.(s as ProgressStep)
-  );
-  const [moat, strategicFit, pegasusFit, japan, devilsAdvocate] = await Promise.all([
+  ["moat", "strategic_fit", "devils_advocate"].forEach((s) => onProgress?.(s as ProgressStep));
+  const [moat, strategicFit, devilsAdvocate] = await Promise.all([
     runStep(
       provider,
       "MoatAgent",
@@ -117,8 +136,6 @@ export async function runAnalysisPipeline(
       buildStrategicFitPrompt(input, snapshot, market),
       signal
     ),
-    runStep(provider, "PegasusFitAgent", pegasusFitSchema, buildPegasusFitPrompt(input, snapshot), signal),
-    runStep(provider, "JapanAgent", japanOpportunitySchema, buildJapanPrompt(input, snapshot), signal),
     runStep(
       provider,
       "DevilsAdvocateAgent",
@@ -194,7 +211,8 @@ function runStep<T>(
   agentName: string,
   schema: z.ZodType<T>,
   prompt: { system: string; user: string },
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  enableWebSearch?: boolean
 ): Promise<T> {
-  return callAgent(provider, agentName, schema, prompt.system, prompt.user, signal);
+  return callAgent(provider, agentName, schema, prompt.system, prompt.user, signal, enableWebSearch);
 }

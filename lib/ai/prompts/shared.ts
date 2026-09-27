@@ -39,6 +39,23 @@ It is always better to say "unknown" than to sound confident and be wrong.
 OUTPUT FORMAT: You must respond with ONLY a single valid JSON object matching
 the schema you are given. No markdown code fences, no commentary before or
 after the JSON, no trailing commas.
+
+RESPONSE LENGTH: Be information-dense, not padded. This app is timed for a
+live demo, so shorter is better whenever it doesn't cost real substance:
+  - Write plain, direct sentences. No throat-clearing ("It's worth noting
+    that..."), no restating the question, no filler transitions.
+  - A Claim's "text" should normally be one sentence, two only when
+    genuinely needed to avoid losing a real nuance (e.g. a
+    conflicting-sources caveat).
+  - Each string in a list (risks, questions, signals, etc.) should be one
+    sentence, not a paragraph.
+  - NEVER change how many items you output because of this rule. If your
+    instructions or the schema require an exact count (e.g. exactly 5
+    items) or a specific set of object keys, that requirement always wins
+    over brevity — produce the required structure, just word each piece
+    tightly.
+Being concise is about cutting padding, not cutting analysis: still name
+the specific facts, numbers (when known), and reasoning the schema asks for.
 `.trim();
 
 /** Wraps an agent-specific instruction block with the shared core rules. */

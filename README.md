@@ -31,7 +31,11 @@ of writing down what you *don't* know yet.
 - **Analyze Startup** — full 16-section research report from just a company
   name or website
 - **Evidence Engine** — every claim is labeled VERIFIED FACT, AI ANALYSIS,
-  ASSUMPTION, or UNKNOWN — never presented as more certain than it is
+  ASSUMPTION, or UNKNOWN — never presented as more certain than it is, with
+  a chart summarizing the breakdown across the whole report
+- **Live web search** — the Research, Founder, and Traction agents can
+  search the web for facts not in the model's training data (Claude's own
+  hosted tool, billed through your existing API key)
 - **Devil's Advocate** — a dedicated agent that tries to disprove the bull
   case on purpose
 - **Strategic Fit Engine** — who could strategically benefit from this
@@ -179,8 +183,8 @@ you make this enterprise-ready?"
 
 ## Future Roadmap
 
-- Live web research (currently agents reason from the model's training
-  knowledge; a search API key slot exists in `.env.example` for this)
+- Extend live web search (currently on ResearchAgent, FounderAgent,
+  TractionAgent) to more agents, if cost/latency allows
 - Real Supabase-backed multi-user storage
 - Real pitch deck parsing (PDF text extraction)
 - OpenAI/Gemini provider implementations behind the existing abstraction

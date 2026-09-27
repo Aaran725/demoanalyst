@@ -1,28 +1,41 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ClaimBlock, ClaimList } from "../ClaimBlock";
 import { SectionShell, SubHeading, BulletList } from "../SectionShell";
+import { MarketSizeFunnel } from "../MarketSizeFunnel";
+import { extractConsistentMarketSize } from "@/lib/analysis-stats";
 import type { MarketIntelligence } from "@/lib/ai/schemas";
 
 export function MarketSection({ market }: { market: MarketIntelligence }) {
+  const marketSize = extractConsistentMarketSize(market);
+
   return (
     <SectionShell title="Market Opportunity" description={`Category: ${market.category}`}>
-      <div className="grid gap-4 sm:grid-cols-3">
+      {marketSize ? (
         <Card>
-          <CardContent className="p-5">
-            <ClaimBlock label="TAM" claim={market.tam} />
+          <CardContent className="space-y-3 p-5">
+            <SubHeading>TAM / SAM / SOM</SubHeading>
+            <MarketSizeFunnel figures={marketSize} />
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-5">
-            <ClaimBlock label="SAM" claim={market.sam} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <ClaimBlock label="SOM" claim={market.som} />
-          </CardContent>
-        </Card>
-      </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Card>
+            <CardContent className="p-5">
+              <ClaimBlock label="TAM" claim={market.tam} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-5">
+              <ClaimBlock label="SAM" claim={market.sam} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-5">
+              <ClaimBlock label="SOM" claim={market.som} />
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <Card>
         <CardContent className="space-y-3 p-5">

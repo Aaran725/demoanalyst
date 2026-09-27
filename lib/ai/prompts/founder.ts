@@ -14,6 +14,17 @@ background. If you don't have reliable knowledge of the founders, say so
 plainly instead of inventing biography details. Then list relevant team
 experience, team questions an investor should ask, and specific information
 that still needs to be verified.
+
+You have live web search available. Use it to look up each founder by name
+plus the company — LinkedIn profiles, press coverage, prior-company
+announcements — rather than relying only on what you already know. This
+matters most for founders who aren't well known publicly.
+
+When a search result supports a background claim, set its "status" to
+"verified_fact" and add a real "sources" entry (real "label", the actual
+"url", and "claimSupported"). If searches turn up nothing reliable for a
+founder, their background stays "unknown" — don't guess a plausible-sounding
+biography just because you looked and found nothing.
 `);
 
   const user = `

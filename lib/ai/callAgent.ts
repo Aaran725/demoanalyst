@@ -37,7 +37,8 @@ export async function callAgent<T>(
   schema: z.ZodType<T>,
   system: string,
   user: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  enableWebSearch?: boolean
 ): Promise<T> {
   let lastError = "";
 
@@ -51,7 +52,7 @@ export async function callAgent<T>(
 
     let raw: string;
     try {
-      raw = await provider.complete({ system, user: prompt, signal });
+      raw = await provider.complete({ system, user: prompt, signal, enableWebSearch });
     } catch (err) {
       // Cancellation isn't a failure worth retrying — stop immediately so
       // we don't keep spending on an analysis nobody's waiting for anymore.

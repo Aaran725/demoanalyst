@@ -1,6 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SectionShell, SubHeading, BulletList } from "../SectionShell";
+import { CompetitorCategoryChart } from "../CompetitorCategoryChart";
+import { countCompetitorsByCategory } from "@/lib/analysis-stats";
 import type { CompetitorMap, Competitor } from "@/lib/ai/schemas";
 
 const CATEGORY_LABEL: Record<Competitor["category"], string> = {
@@ -35,6 +37,13 @@ function CompetitorCard({ competitor }: { competitor: Competitor }) {
 export function CompetitorsSection({ competitors }: { competitors: CompetitorMap }) {
   return (
     <SectionShell title="Competitor Map">
+      <Card>
+        <CardContent className="space-y-3 p-5">
+          <SubHeading>By Category</SubHeading>
+          <CompetitorCategoryChart counts={countCompetitorsByCategory(competitors.competitors)} />
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 sm:grid-cols-2">
         {competitors.competitors.map((c, i) => (
           <CompetitorCard key={i} competitor={c} />

@@ -51,9 +51,10 @@ giant unstructured response.
 Anywhere it's asked about something it doesn't actually have reliable
 knowledge of — specific financial figures, funding amounts, founder
 credentials, market size numbers, or a very recent event outside its
-training data. Without a live web-search connection (which this prototype
-doesn't have wired in), the model is reasoning from what it already knows,
-not fresh research.
+training data. Three agents (Research, Founder, Traction) now have live web
+search to check facts against real sources; the other 11 still reason only
+from what those three already gathered, so a wrong or outdated fact one of
+them started from can still ripple into their analysis.
 
 ### How do you reduce hallucinations?
 
@@ -68,11 +69,13 @@ still needs independent verification, which the app says outright.
 ### How do you verify information?
 
 Right now: the model's stated confidence level is shown, plus sources when
-it names them. This prototype does not have a live web-search or
-document-retrieval step to independently check claims — that's a clearly
-named next step (see the README's Future Roadmap). Today, "verified fact"
-means "the model states this with a specific source," not "an independent
-system re-checked this against that source."
+it names them. Research, Founder, and Traction can now search the web and
+cite real URLs, which is real independent evidence for those three agents'
+claims. But there's still no separate verification step that re-checks a
+claim after the fact — "verified fact" means "the model found and cited a
+specific source," not "a different system independently confirmed that
+source says what's claimed." Fully closing that gap is still a named next
+step.
 
 ### Why did you choose these VC criteria?
 
@@ -132,13 +135,14 @@ useful than one that fills every gap with a plausible-sounding guess.
 
 ### What would you improve next?
 
-In priority order: (1) a real web-search/document-retrieval step so
-"verified fact" means independently checked, not just "the model said so
-with a source name," (2) real pitch deck parsing (today the file is
-referenced by name only, not read), (3) a real Supabase-backed multi-user
-database instead of browser localStorage, (4) OpenAI/Gemini as alternate
-providers behind the existing abstraction, (5) a real company database
-behind Startup World Cup Scout instead of sample data.
+In priority order: (1) extend live web search to more agents and add a real
+independent verification step, so "verified fact" means a second system
+checked the source, not just "the model found and cited it," (2) real
+pitch deck parsing (today the file is referenced by name only, not read),
+(3) a real Supabase-backed multi-user database instead of browser
+localStorage, (4) OpenAI/Gemini as alternate providers behind the existing
+abstraction, (5) a real company database behind Startup World Cup Scout
+instead of sample data.
 
 ### Could Pegasus actually use this?
 

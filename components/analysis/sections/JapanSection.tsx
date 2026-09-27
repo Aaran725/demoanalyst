@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { SectionShell, SubHeading, BulletList } from "../SectionShell";
+import { JapanEntryStepper } from "../JapanEntryStepper";
 import type { JapanOpportunity } from "@/lib/ai/schemas";
 
 export function JapanSection({ japan }: { japan: JapanOpportunity }) {
@@ -32,20 +33,14 @@ export function JapanSection({ japan }: { japan: JapanOpportunity }) {
         <Card><CardContent className="p-5 space-y-1"><SubHeading>Technology Integration</SubHeading><p className="text-sm text-ink-800">{japan.technologyIntegrationConsiderations}</p></CardContent></Card>
       </div>
 
-      <div>
-        <SubHeading>Possible Japan Entry Strategy</SubHeading>
-        <div className="mt-3 grid gap-3 sm:grid-cols-5">
-          {japan.entryStrategy.map((phase) => (
-            <Card key={phase.phase}>
-              <CardContent className="space-y-1.5 p-4">
-                <div className="text-xs font-semibold text-signal-600">PHASE {phase.phase}</div>
-                <div className="text-sm font-medium text-ink-900">{phase.title}</div>
-                <p className="text-xs leading-relaxed text-ink-500">{phase.description}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <SubHeading>Possible Japan Entry Strategy</SubHeading>
+          <div className="mt-5">
+            <JapanEntryStepper phases={japan.entryStrategy} />
+          </div>
+        </CardContent>
+      </Card>
     </SectionShell>
   );
 }

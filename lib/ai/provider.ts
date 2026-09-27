@@ -14,6 +14,14 @@ export interface AIProvider {
    * `signal` lets the caller cancel an in-flight request — wired all the
    * way from the browser's "Cancel" button through to the actual Claude
    * API call, so cancelling really stops spending, not just stops waiting.
+   * `enableWebSearch` is a hint, not a hard requirement: a provider that
+   * doesn't support live search (or a future provider implementation) can
+   * just ignore it and answer from its own knowledge instead.
    */
-  complete(params: { system: string; user: string; signal?: AbortSignal }): Promise<string>;
+  complete(params: {
+    system: string;
+    user: string;
+    signal?: AbortSignal;
+    enableWebSearch?: boolean;
+  }): Promise<string>;
 }

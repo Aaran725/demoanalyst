@@ -13,6 +13,16 @@ say "Not publicly verified" — do not estimate a plausible-sounding number.
 Then list qualitative traction signals (press coverage, notable customer
 logos if public, hiring trends, etc.) and the traction questions an investor
 should still ask.
+
+You have live web search available. Use it to look for funding
+announcements, press releases, and public traction signals — rather than
+relying only on what you already know. This matters most for companies
+whose traction data isn't well covered in your training data.
+
+When a search result supports a claim, set its "status" to "verified_fact"
+and add a real "sources" entry (real "label", the actual "url", and
+"claimSupported"). If searches turn up nothing reliable, the claim stays
+"unknown" — don't turn a lack of results into a guessed number.
 `);
 
   const user = `

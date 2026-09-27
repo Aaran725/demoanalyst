@@ -8,13 +8,13 @@ its exact prompt.
 
 | # | Agent | File | Job |
 |---|---|---|---|
-| 1 | ResearchAgent | `prompts/research.ts` | Builds the factual baseline every other agent starts from: HQ, founders, sector, funding, problem/solution |
+| 1 | ResearchAgent | `prompts/research.ts` | Builds the factual baseline every other agent starts from: HQ, founders, sector, funding, problem/solution. **Has live web search.** |
 | 2 | MarketAgent | `prompts/market.ts` | Market category, TAM/SAM/SOM (only if verifiable), drivers, why now |
 | 3 | ProductAgent | `prompts/product.ts` | What's actually differentiated about the product, and why customers might not choose it |
 | 4 | BusinessModelAgent | `prompts/businessModel.ts` | Revenue model, margins, scalability, concentration risk |
-| 5 | TractionAgent | `prompts/traction.ts` | Revenue, growth, customers, retention — marked "unknown" wherever not publicly verifiable |
+| 5 | TractionAgent | `prompts/traction.ts` | Revenue, growth, customers, retention — marked "unknown" wherever not publicly verifiable. **Has live web search.** |
 | 6 | CompetitionAgent | `prompts/competition.ts` | Direct/indirect/incumbent/emerging competitors, and what makes this startup different |
-| 7 | FounderAgent | `prompts/founder.ts` | Founder background from public information only — never judges character or intelligence |
+| 7 | FounderAgent | `prompts/founder.ts` | Founder background from public information only — never judges character or intelligence. **Has live web search.** |
 | 8 | MoatAgent | `prompts/moat.ts` | Rates 10 specific moat factors as strong/some/weak/unknown evidence — never a numeric score |
 | 9 | StrategicFitAgent | `prompts/strategicFit.ts` | Which corporations/industries could strategically benefit from this startup, with a confidence rating |
 | 10 | PegasusFitAgent | `prompts/pegasusFit.ts` | A "VC-as-a-service" lens — always labeled as general reasoning, never a confirmed Pegasus relationship |
@@ -39,6 +39,9 @@ system prompt starts with:
   `assumption`, or `unknown`
 - Never invent specific numbers (revenue, funding, users, valuations) —
   say "unknown" instead
+- Be information-dense, not padded — this app is timed for a live demo, so
+  every agent is told to write tight sentences and never restate the
+  question, without ever changing how many items a schema requires
 - Respond with ONLY a JSON object matching the given shape, nothing else
 
 ## The orchestrator decides the order
@@ -50,13 +53,18 @@ does). Agents that don't depend on each other run in parallel to keep the
 whole analysis fast:
 
 ```
-Round 1: ResearchAgent
+Round 1: ResearchAgent (has live web search)
 Round 2 (parallel): MarketAgent, ProductAgent, BusinessModelAgent,
-                     TractionAgent, CompetitionAgent, FounderAgent
-Round 3 (parallel): MoatAgent, StrategicFitAgent, PegasusFitAgent,
-                     JapanAgent, DevilsAdvocateAgent
+                     TractionAgent (has live web search), CompetitionAgent,
+                     FounderAgent (has live web search), PegasusFitAgent,
+                     JapanAgent
+Round 3 (parallel): MoatAgent, StrategicFitAgent, DevilsAdvocateAgent
 Round 4: DiligenceAgent, then MemoAgent
 ```
+
+PegasusFitAgent and JapanAgent only ever needed Round 1's output, so they
+run alongside Round 2 instead of waiting behind it for no reason — that
+used to needlessly add a whole extra round of latency to a live analysis.
 
 ## How output gets validated
 

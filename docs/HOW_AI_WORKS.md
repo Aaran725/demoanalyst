@@ -94,10 +94,16 @@ making the decision itself.
   true. Mitigated by the Evidence Engine's discipline (mark unknowns as
   unknown) — but not eliminated. Nothing in this app should be treated as
   verified without checking the actual source.
-- **Training data cutoff**: without a live web-search integration, the
-  model's knowledge of very recent events is limited. The `.env.example`
-  has a slot for a search API key for exactly this reason, but it's not
-  wired in by default.
+- **Training data cutoff**: ResearchAgent, FounderAgent, and TractionAgent
+  now have live web search (Claude's own hosted tool, billed through the
+  same API key — see `lib/ai/anthropic.ts`), so those 3 can look up recent
+  or small companies instead of relying only on training knowledge. The
+  other 11 agents still reason purely from what those 3 already gathered —
+  they don't search themselves, both to control cost/latency and because
+  they don't need to (a market-analysis or Devil's-Advocate agent should be
+  reasoning well over facts already found, not re-researching them). Even
+  with search, a very obscure or private company may still come back mostly
+  "unknown" — searching and finding nothing is not evidence of anything.
 - **Schema-shaped ≠ true**: passing Zod validation only means the AI's
   answer has the right *shape* — it doesn't mean the content is correct.
   Validation catches malformed output, not wrong-but-well-formed output.
