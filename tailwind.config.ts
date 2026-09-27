@@ -45,6 +45,21 @@ const config: Config = {
           medium: "#a15c00",
           high: "#b3261e",
         },
+        // Public-equity Truth Mode's 5-tier confidence scale (distinct from
+        // the startup side's 4-tier `evidence` scale above — public markets
+        // add "consensus" and split "estimate" from "inference").
+        tier: {
+          verified: "#1a7a4c",
+          verifiedBg: "#e8f5ee",
+          estimate: "#a15c00",
+          estimateBg: "#fbf1de",
+          consensus: "#1f5eff",
+          consensusBg: "#eef3ff",
+          inference: "#c2540c",
+          inferenceBg: "#fdeee3",
+          unverified: "#b3261e",
+          unverifiedBg: "#fdecea",
+        },
         // Chart-only colors, validated with the dataviz skill's palette
         // checker (contrast, colorblind-safe separation, chroma floor).
         // `chartUnknown` exists because evidence.unknown (#6b7180) is too

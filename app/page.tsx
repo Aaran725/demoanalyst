@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, Swords, FileText, Network, Building2 } from "lucide-react";
+import { Search, Swords, FileText, Network, Building2, LineChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnalysisSummaryCard } from "@/components/analysis/AnalysisSummaryCard";
@@ -40,21 +40,35 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-ink-950">AARAN AI</h1>
-          <p className="mt-1 text-ink-500">Junior VC Copilot — AI venture intelligence for the next generation.</p>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-400">
+            Autonomous Research &amp; Analysis Network
+          </p>
+          <p className="mt-2 text-ink-500">&ldquo;Don&apos;t predict the market. Understand the business.&rdquo;</p>
           <p className="mt-1 text-xs text-ink-400">Built by Aaran Chowdhery</p>
         </div>
-        <div className="flex gap-3">
-          <Button asChild size="lg">
-            <Link href="/analyze">
-              <Search size={16} /> Analyze a Startup
-            </Link>
-          </Button>
-          <Button asChild size="lg" variant="signal">
-            <Link href="/challenge">
-              <Swords size={16} /> Challenge AARAN AI
-            </Link>
-          </Button>
-        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Button asChild size="lg" className="h-auto flex-col gap-1.5 py-4">
+          <Link href="/company">
+            <Building2 size={18} /> Analyze Company
+          </Link>
+        </Button>
+        <Button asChild size="lg" variant="secondary" className="h-auto flex-col gap-1.5 py-4">
+          <Link href="/analyze">
+            <Search size={18} /> Analyze Startup
+          </Link>
+        </Button>
+        <Button asChild size="lg" variant="secondary" className="h-auto flex-col gap-1.5 py-4">
+          <Link href="/world-cup">
+            <LineChart size={18} /> Compare Investments
+          </Link>
+        </Button>
+        <Button asChild size="lg" variant="signal" className="h-auto flex-col gap-1.5 py-4">
+          <Link href="/challenge">
+            <Swords size={18} /> Challenge My Thesis
+          </Link>
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

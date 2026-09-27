@@ -12,11 +12,13 @@ import {
   LineChart,
   BookMarked,
   HelpCircle,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/company", label: "Analyze Company", icon: Building2 },
   { href: "/analyze", label: "Analyze Startup", icon: Search },
   { href: "/challenge", label: "Challenge Mode", icon: Swords },
   { href: "/strategic-fit", label: "Strategic Fit", icon: Network },
