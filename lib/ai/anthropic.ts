@@ -16,14 +16,19 @@ export function createAnthropicProvider(): AIProvider {
   }
 
   const client = new Anthropic({ apiKey });
-  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5-20250929";
+  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-5";
 
   return {
     name: "anthropic",
     async complete({ system, user }) {
       const response = await client.messages.create({
         model,
-        max_tokens: 4096,
+        max_tokens: 8000,
+        // Every agent here does focused, single-step JSON generation from
+        // context it's already been given — not multi-step reasoning — so
+        // extended thinking (on by default on this model) only adds latency
+        // and cost without improving output quality. Turned off for speed.
+        thinking: { type: "disabled" },
         system,
         messages: [{ role: "user", content: user }],
       });
