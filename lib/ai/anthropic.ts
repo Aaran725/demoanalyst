@@ -21,7 +21,7 @@ export function createAnthropicProvider(): AIProvider {
 
   return {
     name: "anthropic",
-    async complete({ system, user, signal, enableWebSearch }) {
+    async complete({ system, user, signal, enableWebSearch, onEvent }) {
       // Every one of this app's ~15 agent calls builds its system prompt via
       // buildSystemPrompt() (lib/ai/prompts/shared.ts), which always starts
       // with the same, large, byte-identical CORE_RULES block. Splitting
@@ -81,9 +81,19 @@ export function createAnthropicProvider(): AIProvider {
       for (const block of response.content) {
         if (block.type === "text") {
           combinedText += block.text;
+        } else if (block.type === "server_tool_use" && block.name === "web_search") {
+          // The literal query text Claude's hosted search tool ran — real,
+          // not simulated. `input` is typed `unknown` by the SDK but is
+          // documented as `{query: string}` for this tool.
+          const query = (block.input as { query?: unknown })?.query;
+          if (typeof query === "string") onEvent?.({ type: "search", query });
         } else if (block.type === "web_search_tool_result") {
           if (Array.isArray(block.content)) {
             console.log(`[web_search] ${block.content.length} result(s) returned`);
+            onEvent?.({
+              type: "sources",
+              sources: block.content.map((r) => ({ url: r.url, title: r.title })),
+            });
           } else {
             console.warn(`[web_search] search error: ${block.content.error_code}`);
           }

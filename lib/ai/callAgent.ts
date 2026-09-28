@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { AIProvider } from "./provider";
+import type { AIProvider, ProviderLiveEvent } from "./provider";
 
 /** Raised when an agent's output fails schema validation even after a retry. */
 export class AgentError extends Error {
@@ -31,6 +31,20 @@ export interface AgentTraceInfo {
 }
 
 /**
+ * Real-time event for the live "watch AARAN research" progress view (see
+ * components/analysis/AnalysisProgress.tsx) — fired AS a call happens, not
+ * after. Distinct from AgentTraceInfo/onTrace above, which is a post-hoc
+ * summary collected for the Agent Trace panel; this is additive live
+ * streaming of the same underlying activity, tagged per-agent so a UI
+ * tracking all 13 agents at once can tell them apart.
+ */
+export type LiveAgentEvent =
+  | { type: "start"; agentName: string }
+  | { type: "search"; agentName: string; query: string }
+  | { type: "sources"; agentName: string; sources: { url: string; title: string }[] }
+  | { type: "done"; agentName: string; durationMs: number; webSearchCount: number };
+
+/**
  * Calls one AI agent and validates its output against a Zod schema.
  *
  * If the model's JSON doesn't match the schema (missing field, wrong type,
@@ -43,6 +57,11 @@ export interface AgentTraceInfo {
  * success, with real timing/search-usage instrumentation for the Agent
  * Trace panel. A failed call never produces a trace entry — Promise.all
  * rejection aborts the whole pipeline anyway, so there's nothing to show.
+ *
+ * `onLive` is also optional and additive: it fires `start` once immediately
+ * (a retry isn't a new "start" from the UI's perspective), `search`/
+ * `sources` as real web search activity happens mid-call, and `done` at the
+ * same point `onTrace` fires. Never fires on failure, same as `onTrace`.
  */
 export async function callAgent<T>(
   provider: AIProvider,
@@ -52,11 +71,16 @@ export async function callAgent<T>(
   user: string,
   signal?: AbortSignal,
   enableWebSearch?: boolean | number,
-  onTrace?: (info: AgentTraceInfo) => void
+  onTrace?: (info: AgentTraceInfo) => void,
+  onLive?: (event: LiveAgentEvent) => void
 ): Promise<T> {
   const startedAt = Date.now();
   let lastError = "";
   let webSearchCount = 0;
+
+  onLive?.({ type: "start", agentName });
+  const forwardLiveEvent = (e: ProviderLiveEvent) =>
+    onLive?.(e.type === "search" ? { type: "search", agentName, query: e.query } : { type: "sources", agentName, sources: e.sources });
 
   for (let attempt = 0; attempt < 2; attempt++) {
     if (signal?.aborted) throw new DOMException("Analysis cancelled", "AbortError");
@@ -68,7 +92,13 @@ export async function callAgent<T>(
 
     let raw: string;
     try {
-      const response = await provider.complete({ system, user: prompt, signal, enableWebSearch });
+      const response = await provider.complete({
+        system,
+        user: prompt,
+        signal,
+        enableWebSearch,
+        onEvent: onLive ? forwardLiveEvent : undefined,
+      });
       raw = response.text;
       webSearchCount += response.meta.webSearchCount;
     } catch (err) {
@@ -84,7 +114,9 @@ export async function callAgent<T>(
       const parsed = JSON.parse(jsonText);
       const result = schema.safeParse(parsed);
       if (result.success) {
-        onTrace?.({ agentName, durationMs: Date.now() - startedAt, attempts: attempt + 1, webSearchCount });
+        const durationMs = Date.now() - startedAt;
+        onTrace?.({ agentName, durationMs, attempts: attempt + 1, webSearchCount });
+        onLive?.({ type: "done", agentName, durationMs, webSearchCount });
         return result.data;
       }
       lastError = result.error.issues

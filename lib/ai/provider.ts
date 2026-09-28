@@ -6,6 +6,20 @@
  * writing one new file (like anthropic.ts) that implements this interface —
  * nothing in lib/ai/prompts/ or lib/ai/orchestrator.ts has to change.
  */
+
+/**
+ * Real-time events a provider can report DURING a call, as they happen —
+ * not just in the final `{text, meta}` result. Currently just web search
+ * activity: the literal query text Claude's hosted search tool ran, and the
+ * real result URLs/titles it got back. Used to power the live "watch AARAN
+ * research" progress view (see lib/ai/callAgent.ts's `onLive` and
+ * components/analysis/AnalysisProgress.tsx) — a provider that doesn't
+ * support live search just never calls this, which is fine.
+ */
+export type ProviderLiveEvent =
+  | { type: "search"; query: string }
+  | { type: "sources"; sources: { url: string; title: string }[] };
+
 export interface AIProvider {
   /** Short name for logging, e.g. "anthropic" */
   name: string;
@@ -19,12 +33,15 @@ export interface AIProvider {
    * just stops waiting. `enableWebSearch` is a hint, not a hard requirement:
    * a provider that doesn't support live search (or a future provider
    * implementation) can just ignore it and answer from its own knowledge
-   * instead — in that case `meta.webSearchCount` is simply 0.
+   * instead — in that case `meta.webSearchCount` is simply 0. `onEvent`, if
+   * given, is called synchronously as real search activity happens during
+   * the call — see ProviderLiveEvent above.
    */
   complete(params: {
     system: string;
     user: string;
     signal?: AbortSignal;
     enableWebSearch?: boolean | number;
+    onEvent?: (event: ProviderLiveEvent) => void;
   }): Promise<{ text: string; meta: { webSearchCount: number } }>;
 }

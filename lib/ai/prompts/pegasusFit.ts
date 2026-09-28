@@ -35,6 +35,16 @@ THIS startup has, or is likely to get, an actual relationship with
 Pegasus. Searching and finding nothing does not change your output either
 — the "disclaimer" field below stays exactly as written regardless of what
 you find.
+
+OPTIONAL "realWorldPrecedent" FIELD: if — and only if — your search
+actually turns up a real, specific, checkable precedent (a real named
+company Pegasus has publicly worked with in an analogous space, or a real
+named Pegasus program like the Startup World Cup, with a real source),
+include it as a Claim with status "verified_fact" and a real source URL.
+This is a precedent/analogy, never a claim that THIS startup has any actual
+relationship with Pegasus. If you don't find anything real and specific,
+OMIT this field entirely — do not fill it with a generic or invented claim.
+Most runs should omit it; that is expected and correct, not a failure.
 `);
 
   const user = `
@@ -52,8 +62,10 @@ Respond with ONLY a JSON object:
   "corporatePilotIdeas": string[],
   "distributionIdeas": string[],
   "strategicInvestmentAngle": string,
-  "disclaimer": "Potential fit based on industry characteristics — not a confirmed Pegasus relationship."
+  "disclaimer": "Potential fit based on industry characteristics — not a confirmed Pegasus relationship.",
+  "realWorldPrecedent"?: { "text": string, "status": "verified_fact", "sources": [{ "label": string, "url": string, "date"?: string, "claimSupported": string }] }
 }
+Omit "realWorldPrecedent" entirely if you found nothing real and specific.
 `.trim();
 
   return { system, user };

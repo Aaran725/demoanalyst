@@ -86,7 +86,24 @@ export async function POST(request: Request) {
           provider,
           input,
           (step) => send({ type: "progress", step }),
-          request.signal
+          request.signal,
+          (event) => {
+            switch (event.type) {
+              case "start":
+                return send({ type: "agent_start", agent: event.agentName });
+              case "search":
+                return send({ type: "agent_search", agent: event.agentName, query: event.query });
+              case "sources":
+                return send({ type: "agent_sources", agent: event.agentName, sources: event.sources });
+              case "done":
+                return send({
+                  type: "agent_done",
+                  agent: event.agentName,
+                  durationMs: event.durationMs,
+                  webSearchCount: event.webSearchCount,
+                });
+            }
+          }
         );
         send({ type: "done", mode: "live", analysis });
       } catch (err) {

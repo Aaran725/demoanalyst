@@ -93,6 +93,7 @@ export default function ChallengePage() {
             isDone={false}
             startedAt={state.startedAt}
             currentStep={state.currentStep}
+            agents={state.agents}
             onCancel={cancel}
           />
         )}

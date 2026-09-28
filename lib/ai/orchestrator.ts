@@ -1,6 +1,6 @@
 import type { AIProvider } from "./provider";
 import type { ProgressStep } from "./progress";
-import { callAgent, type AgentTraceInfo } from "./callAgent";
+import { callAgent, type AgentTraceInfo, type LiveAgentEvent } from "./callAgent";
 import {
   startupInputSchema,
   startupSnapshotSchema,
@@ -81,7 +81,8 @@ export async function runAnalysisPipeline(
   provider: AIProvider,
   rawInput: unknown,
   onProgress?: (step: ProgressStep) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  onLiveEvent?: (event: LiveAgentEvent) => void
 ): Promise<FullAnalysis> {
   const input: StartupInput = startupInputSchema.parse(rawInput);
 
@@ -103,7 +104,8 @@ export async function runAnalysisPipeline(
     researchPrompt.user,
     signal,
     true,
-    recordTrace(1)
+    recordTrace(1),
+    onLiveEvent
   );
 
   // Round 2 — kick off all 8 immediately. `runStep`/`callAgent` start the
@@ -117,7 +119,8 @@ export async function runAnalysisPipeline(
     buildMarketPrompt(input, snapshot),
     signal,
     undefined,
-    recordTrace(2)
+    recordTrace(2),
+    onLiveEvent
   );
   const productPromise = runStep(
     provider,
@@ -126,7 +129,8 @@ export async function runAnalysisPipeline(
     buildProductPrompt(input, snapshot),
     signal,
     undefined,
-    recordTrace(2)
+    recordTrace(2),
+    onLiveEvent
   );
   const businessModelPromise = runStep(
     provider,
@@ -135,7 +139,8 @@ export async function runAnalysisPipeline(
     buildBusinessModelPrompt(input, snapshot),
     signal,
     undefined,
-    recordTrace(2)
+    recordTrace(2),
+    onLiveEvent
   );
   const tractionPromise = runStep(
     provider,
@@ -150,7 +155,8 @@ export async function runAnalysisPipeline(
     // targeted search per metric, which was leaving genuinely-findable
     // figures marked "unknown" just because the searches ran out.
     8,
-    recordTrace(2)
+    recordTrace(2),
+    onLiveEvent
   );
   const competitorsPromise = runStep(
     provider,
@@ -159,7 +165,8 @@ export async function runAnalysisPipeline(
     buildCompetitionPrompt(input, snapshot),
     signal,
     undefined,
-    recordTrace(2)
+    recordTrace(2),
+    onLiveEvent
   );
   const foundersPromise = runStep(
     provider,
@@ -168,7 +175,8 @@ export async function runAnalysisPipeline(
     buildFounderPrompt(input, snapshot),
     signal,
     true,
-    recordTrace(2)
+    recordTrace(2),
+    onLiveEvent
   );
   const pegasusFitPromise = runStep(
     provider,
@@ -177,7 +185,8 @@ export async function runAnalysisPipeline(
     buildPegasusFitPrompt(input, snapshot),
     signal,
     true,
-    recordTrace(2)
+    recordTrace(2),
+    onLiveEvent
   );
   const japanPromise = runStep(
     provider,
@@ -186,7 +195,8 @@ export async function runAnalysisPipeline(
     buildJapanPrompt(input, snapshot),
     signal,
     true,
-    recordTrace(2)
+    recordTrace(2),
+    onLiveEvent
   );
   [
     "product",
@@ -212,7 +222,8 @@ export async function runAnalysisPipeline(
       buildMoatPrompt(input, snapshot, product, competitors),
       signal,
       undefined,
-      recordTrace(3)
+      recordTrace(3),
+      onLiveEvent
     );
   });
   const strategicFitPromise = marketPromise.then((market) => {
@@ -224,7 +235,8 @@ export async function runAnalysisPipeline(
       buildStrategicFitPrompt(input, snapshot, market),
       signal,
       undefined,
-      recordTrace(3)
+      recordTrace(3),
+      onLiveEvent
     );
   });
   const devilsAdvocatePromise = Promise.all([marketPromise, competitorsPromise]).then(([market, competitors]) => {
@@ -236,7 +248,8 @@ export async function runAnalysisPipeline(
       buildDevilsAdvocatePrompt(input, snapshot, market, competitors),
       signal,
       undefined,
-      recordTrace(3)
+      recordTrace(3),
+      onLiveEvent
     );
   });
 
@@ -266,7 +279,8 @@ export async function runAnalysisPipeline(
       buildFactCheckPrompt(input, snapshot, candidates),
       signal,
       6,
-      recordTrace(3)
+      recordTrace(3),
+      onLiveEvent
     );
     return { candidates, result };
   });
@@ -293,7 +307,8 @@ export async function runAnalysisPipeline(
       buildDiligencePrompt(input, snapshot, businessModel, traction, competitors, devilsAdvocate),
       signal,
       undefined,
-      recordTrace(4)
+      recordTrace(4),
+      onLiveEvent
     );
   });
 
@@ -366,7 +381,8 @@ export async function runAnalysisPipeline(
     buildMemoPrompt(input, analysisSoFar),
     signal,
     undefined,
-    recordTrace(4)
+    recordTrace(4),
+    onLiveEvent
   );
 
   onProgress?.("done");
@@ -393,7 +409,8 @@ function runStep<T>(
   prompt: { system: string; user: string },
   signal?: AbortSignal,
   enableWebSearch?: boolean | number,
-  onTrace?: (info: AgentTraceInfo) => void
+  onTrace?: (info: AgentTraceInfo) => void,
+  onLive?: (event: LiveAgentEvent) => void
 ): Promise<T> {
-  return callAgent(provider, agentName, schema, prompt.system, prompt.user, signal, enableWebSearch, onTrace);
+  return callAgent(provider, agentName, schema, prompt.system, prompt.user, signal, enableWebSearch, onTrace, onLive);
 }

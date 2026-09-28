@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { SectionShell, SubHeading, BulletList } from "../SectionShell";
+import { ClaimBlock } from "../ClaimBlock";
 import type { PegasusFit } from "@/lib/ai/schemas";
 
 export function PegasusFitSection({ pegasusFit }: { pegasusFit: PegasusFit }) {
@@ -10,6 +11,17 @@ export function PegasusFitSection({ pegasusFit }: { pegasusFit: PegasusFit }) {
           <p className="text-sm leading-relaxed text-ink-800">{pegasusFit.vcAsAServiceRationale}</p>
         </CardContent>
       </Card>
+
+      {/* Rare by design — only present when live web search actually found a
+          real, checkable precedent (see lib/ai/prompts/pegasusFit.ts). Most
+          runs omit this entirely; that's expected, not a bug. */}
+      {pegasusFit.realWorldPrecedent && (
+        <Card>
+          <CardContent className="p-5">
+            <ClaimBlock label="Closest Real-World Precedent Found" claim={pegasusFit.realWorldPrecedent} />
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Card><CardContent className="space-y-3 p-5"><SubHeading>Enterprise Partnership Ideas</SubHeading><BulletList items={pegasusFit.enterprisePartnershipIdeas} /></CardContent></Card>

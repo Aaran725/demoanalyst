@@ -6,9 +6,38 @@ import type { ProgressStep } from "./ai/progress";
 import type { AnalyzeStreamEvent } from "./ai/streamEvents";
 import { cacheAnalysis } from "./storage";
 
+/**
+ * Live, real-time state for ONE agent during a run — powers the "Live Agent
+ * Theater" progress view (components/analysis/AnalysisProgress.tsx). Every
+ * query/source here is the literal Anthropic API response for that agent's
+ * call, not simulated. `queries`/`sources` are capped to the most recent few
+ * so the UI stays legible; `sourceCount` tracks the real running total even
+ * past that cap.
+ */
+export interface AgentLiveState {
+  status: "running" | "done";
+  queries: string[];
+  searchCount: number;
+  sources: { url: string; title: string }[];
+  sourceCount: number;
+  durationMs?: number;
+  webSearchCount?: number;
+}
+
+const MAX_SHOWN = 3;
+
+function emptyAgentState(): AgentLiveState {
+  return { status: "running", queries: [], searchCount: 0, sources: [], sourceCount: 0 };
+}
+
 type AnalyzeState =
   | { status: "idle" }
-  | { status: "loading"; startedAt: number; currentStep?: ProgressStep }
+  | {
+      status: "loading";
+      startedAt: number;
+      currentStep?: ProgressStep;
+      agents: Record<string, AgentLiveState>;
+    }
   | { status: "success"; analysis: FullAnalysis; notice?: string }
   | { status: "error"; error: string; demoFallback?: FullAnalysis }
   | { status: "cancelled" };
@@ -30,7 +59,7 @@ export function useAnalyze() {
   const runAnalysis = useCallback(async (input: StartupInput) => {
     const controller = new AbortController();
     abortControllerRef.current = controller;
-    setState({ status: "loading", startedAt: Date.now() });
+    setState({ status: "loading", startedAt: Date.now(), agents: {} });
 
     try {
       const res = await fetch("/api/analyze", {
@@ -59,6 +88,59 @@ export function useAnalyze() {
           const event: AnalyzeStreamEvent = JSON.parse(line);
           if (event.type === "progress") {
             setState((s) => (s.status === "loading" ? { ...s, currentStep: event.step } : s));
+          } else if (event.type === "agent_start") {
+            setState((s) =>
+              s.status !== "loading" ? s : { ...s, agents: { ...s.agents, [event.agent]: emptyAgentState() } }
+            );
+          } else if (event.type === "agent_search") {
+            setState((s) => {
+              if (s.status !== "loading") return s;
+              const prev = s.agents[event.agent] ?? emptyAgentState();
+              return {
+                ...s,
+                agents: {
+                  ...s.agents,
+                  [event.agent]: {
+                    ...prev,
+                    queries: [...prev.queries, event.query].slice(-MAX_SHOWN),
+                    searchCount: prev.searchCount + 1,
+                  },
+                },
+              };
+            });
+          } else if (event.type === "agent_sources") {
+            setState((s) => {
+              if (s.status !== "loading") return s;
+              const prev = s.agents[event.agent] ?? emptyAgentState();
+              return {
+                ...s,
+                agents: {
+                  ...s.agents,
+                  [event.agent]: {
+                    ...prev,
+                    sources: [...prev.sources, ...event.sources].slice(-MAX_SHOWN),
+                    sourceCount: prev.sourceCount + event.sources.length,
+                  },
+                },
+              };
+            });
+          } else if (event.type === "agent_done") {
+            setState((s) => {
+              if (s.status !== "loading") return s;
+              const prev = s.agents[event.agent] ?? emptyAgentState();
+              return {
+                ...s,
+                agents: {
+                  ...s.agents,
+                  [event.agent]: {
+                    ...prev,
+                    status: "done",
+                    durationMs: event.durationMs,
+                    webSearchCount: event.webSearchCount,
+                  },
+                },
+              };
+            });
           } else if (event.type === "done") {
             cacheAnalysis(event.analysis);
             setState({ status: "success", analysis: event.analysis, notice: event.notice });

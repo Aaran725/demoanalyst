@@ -275,6 +275,12 @@ export const pegasusFitSchema = z.object({
   distributionIdeas: z.array(z.string()),
   strategicInvestmentAngle: z.string(),
   disclaimer: z.string(),
+  // Optional and deliberately rare: the closest REAL, checkable precedent
+  // found via live web search (a real analogous company, a real named
+  // program) — omitted entirely, not filled with a generic claim, when
+  // nothing real was found. Reuses claimSchema so it renders through the
+  // existing <ClaimBlock> with zero new UI code. See prompts/pegasusFit.ts.
+  realWorldPrecedent: claimSchema.optional(),
 });
 export type PegasusFit = z.infer<typeof pegasusFitSchema>;
 
@@ -303,6 +309,10 @@ export const japanOpportunitySchema = z.object({
   technologyIntegrationConsiderations: z.string(),
   localCompetition: z.array(z.string()),
   entryStrategy: z.array(japanPhaseSchema).length(5),
+  // Optional and deliberately rare — see pegasusFitSchema's identical field
+  // above for the full rationale. Reuses claimSchema; renders via the
+  // existing <ClaimBlock>. See prompts/japan.ts.
+  realWorldPrecedent: claimSchema.optional(),
 });
 export type JapanOpportunity = z.infer<typeof japanOpportunitySchema>;
 

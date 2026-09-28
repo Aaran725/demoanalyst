@@ -9,6 +9,12 @@
   body {
     @apply bg-paper text-ink-900;
   }
+  /* Presentation "Stage Mode" — bumps every rem-based Tailwind text size
+     app-wide for back-of-room readability. Toggled by
+     lib/presentation-context.tsx alongside the real fullscreen request. */
+  html.presentation-mode {
+    font-size: 113%;
+  }
 }
 
 @media print {

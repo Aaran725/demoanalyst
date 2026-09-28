@@ -1,4 +1,6 @@
+import { Card, CardContent } from "@/components/ui/card";
 import { SectionShell } from "../SectionShell";
+import { ClaimBlock } from "../ClaimBlock";
 import { MarketOpportunityBody } from "./MarketOpportunityBody";
 import { MarketEntryExplorer } from "../MarketEntryExplorer";
 import type { JapanOpportunity, StartupInput, StartupSnapshot } from "@/lib/ai/schemas";
@@ -34,6 +36,17 @@ export function JapanSection({
         technologyIntegrationConsiderations={japan.technologyIntegrationConsiderations}
         entryStrategy={japan.entryStrategy}
       />
+
+      {/* Rare by design — only present when live web search actually found a
+          real, checkable precedent (see lib/ai/prompts/japan.ts). Most runs
+          omit this entirely; that's expected, not a bug. */}
+      {japan.realWorldPrecedent && (
+        <Card>
+          <CardContent className="p-5">
+            <ClaimBlock label="Closest Real-World Precedent Found" claim={japan.realWorldPrecedent} />
+          </CardContent>
+        </Card>
+      )}
 
       <MarketEntryExplorer input={input} snapshot={snapshot} />
     </SectionShell>

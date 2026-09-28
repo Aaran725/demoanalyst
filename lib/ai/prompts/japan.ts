@@ -25,6 +25,17 @@ Japanese company as interested or engaged if you found a real, citable
 source saying so. Whether or not your searches turn up anything, this
 output is still AI-generated strategic reasoning, not confirmed market
 research.
+
+OPTIONAL "realWorldPrecedent" FIELD: if — and only if — your search
+actually turns up a real, specific, checkable precedent (a real comparable
+company's real Japan market entry, a real named Japanese partner/customer
+in an analogous space, with a real source), include it as a Claim with
+status "verified_fact" and a real source URL. This is a precedent/analogy,
+never a claim that a real Japanese company has interest in THIS specific
+startup unless you truly found that exact fact. If you don't find anything
+real and specific, OMIT this field entirely — do not fill it with a generic
+or invented claim. Most runs should omit it; that is expected and correct,
+not a failure.
 `);
 
   const user = `
@@ -52,8 +63,10 @@ Respond with ONLY a JSON object:
     { "phase": 3, "title": "Strategic Partner", "description": string },
     { "phase": 4, "title": "Enterprise Deployment", "description": string },
     { "phase": 5, "title": "Scale", "description": string }
-  ]
+  ],
+  "realWorldPrecedent"?: { "text": string, "status": "verified_fact", "sources": [{ "label": string, "url": string, "date"?: string, "claimSupported": string }] }
 }
+Omit "realWorldPrecedent" entirely if you found nothing real and specific.
 `.trim();
 
   return { system, user };
