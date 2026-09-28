@@ -8,7 +8,7 @@ function formatDuration(ms: number): string {
 const ROUND_LABEL: Record<number, string> = {
   1: "Round 1 — Research",
   2: "Round 2 — Market, product, business model, traction, competitors, founders, Pegasus fit, Japan",
-  3: "Round 3 — Moat, strategic fit, Devil's Advocate",
+  3: "Round 3 — Moat, strategic fit, Devil's Advocate, fact-check",
   4: "Round 4 — Diligence, IC memo",
 };
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, Ban } from "lucide-react";
 import { StartupInputForm } from "@/components/analysis/StartupInputForm";
 import { AnalysisProgress } from "@/components/analysis/AnalysisProgress";
@@ -9,8 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAnalyze } from "@/lib/useAnalyze";
 
-export default function AnalyzeStartupPage() {
+// useSearchParams() requires a <Suspense> boundary in Next.js 14's App
+// Router (it bails the page out of static rendering otherwise), so the page
+// component below is a thin wrapper and all the real logic lives in this
+// inner component.
+function AnalyzeStartupPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialCompanyName = searchParams.get("company") ?? "";
   const { state, runAnalysis, cancel, useDemoFallback } = useAnalyze();
 
   useEffect(() => {
@@ -69,9 +75,17 @@ export default function AnalyzeStartupPage() {
 
       <Card>
         <CardContent className="p-6">
-          <StartupInputForm onSubmit={runAnalysis} />
+          <StartupInputForm onSubmit={runAnalysis} initialCompanyName={initialCompanyName} />
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function AnalyzeStartupPage() {
+  return (
+    <Suspense fallback={null}>
+      <AnalyzeStartupPageInner />
+    </Suspense>
   );
 }

@@ -64,6 +64,46 @@ export function computeEvidenceBreakdown(analysis: FullAnalysis): EvidenceBreakd
 }
 
 // ---------------------------------------------------------------------------
+// Source corroboration — of the claims already labeled "verified_fact", how
+// many are backed by 2+ independent sources (vs. just 1). Real arithmetic
+// over real data, never an invented confidence score. Note this counts ANY
+// verified_fact claim with 2+ sources, not only ones the Fact-Checker agent
+// actually touched — some agents already cite 2 sources on their own — so
+// this is worded in the UI as "backed by," not "verified by our fact-check
+// pass."
+// ---------------------------------------------------------------------------
+
+export interface SourceCorroboration {
+  corroborated: number;
+  totalVerifiedFacts: number;
+}
+
+export function computeSourceCorroboration(analysis: FullAnalysis): SourceCorroboration {
+  let corroborated = 0;
+  let totalVerifiedFacts = 0;
+
+  function walk(value: unknown) {
+    if (Array.isArray(value)) {
+      value.forEach(walk);
+      return;
+    }
+    if (value && typeof value === "object") {
+      if (isClaim(value)) {
+        if (value.status === "verified_fact") {
+          totalVerifiedFacts++;
+          if ((value.sources?.length ?? 0) >= 2) corroborated++;
+        }
+        return;
+      }
+      Object.values(value).forEach(walk);
+    }
+  }
+
+  walk(analysis);
+  return { corroborated, totalVerifiedFacts };
+}
+
+// ---------------------------------------------------------------------------
 // Competitor category breakdown
 // ---------------------------------------------------------------------------
 

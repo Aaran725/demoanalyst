@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import type { EvidenceBreakdown } from "@/lib/analysis-stats";
+import type { EvidenceBreakdown, SourceCorroboration } from "@/lib/analysis-stats";
 import type { EvidenceStatus } from "@/lib/ai/schemas";
 
 const SEGMENT_CONFIG: Record<EvidenceStatus, { label: string; barClass: string; dotClass: string }> = {
@@ -18,7 +18,13 @@ const ORDER: EvidenceStatus[] = ["verified_fact", "ai_analysis", "assumption", "
  * This is the single chart most worth seeing first: it's visual proof of
  * the whole app's core idea, before the reader has read a single section.
  */
-export function EvidenceEngineChart({ breakdown }: { breakdown: EvidenceBreakdown }) {
+export function EvidenceEngineChart({
+  breakdown,
+  corroboration,
+}: {
+  breakdown: EvidenceBreakdown;
+  corroboration?: SourceCorroboration;
+}) {
   const { counts, total } = breakdown;
 
   if (total === 0) return null;
@@ -67,6 +73,19 @@ export function EvidenceEngineChart({ breakdown }: { breakdown: EvidenceBreakdow
             </div>
           ))}
         </div>
+
+        {/* Worded "backed by," not "verified by our fact-check pass" — this
+            counts any verified-fact claim with 2+ sources, including ones
+            an agent already cited independently, not only claims the
+            Fact-Checker agent itself touched. */}
+        {corroboration && corroboration.totalVerifiedFacts > 0 && (
+          <p className="border-t border-ink-100 pt-2 text-xs text-ink-500">
+            <span className="font-mono font-semibold text-ink-900">
+              {corroboration.corroborated} of {corroboration.totalVerifiedFacts}
+            </span>{" "}
+            verified facts are backed by 2+ independent sources.
+          </p>
+        )}
       </CardContent>
     </Card>
   );

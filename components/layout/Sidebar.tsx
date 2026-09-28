@@ -12,12 +12,14 @@ import {
   LineChart,
   BookMarked,
   HelpCircle,
+  ListChecks,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/analyze", label: "Analyze Startup", icon: Search },
+  { href: "/triage", label: "Deal Flow Triage", icon: ListChecks },
   { href: "/challenge", label: "Challenge Mode", icon: Swords },
   { href: "/strategic-fit", label: "Strategic Fit", icon: Network },
   { href: "/world-cup", label: "World Cup Scout", icon: Trophy },

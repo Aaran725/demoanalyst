@@ -21,7 +21,8 @@ import { DiligenceSection } from "./sections/DiligenceSection";
 import { ICMemoView } from "./ICMemoView";
 import { EvidenceEngineChart } from "./EvidenceEngineChart";
 import { AgentTracePanel } from "./AgentTracePanel";
-import { computeEvidenceBreakdown } from "@/lib/analysis-stats";
+import { FollowUpQA } from "./FollowUpQA";
+import { computeEvidenceBreakdown, computeSourceCorroboration } from "@/lib/analysis-stats";
 
 const TABS = [
   { value: "snapshot", label: "Snapshot" },
@@ -55,7 +56,12 @@ export function AnalysisView({ analysis }: { analysis: FullAnalysis }) {
         {analysis.isDemoData && <Badge variant="outline">DEMO DATA</Badge>}
       </div>
 
-      <EvidenceEngineChart breakdown={computeEvidenceBreakdown(analysis)} />
+      <FollowUpQA analysis={analysis} />
+
+      <EvidenceEngineChart
+        breakdown={computeEvidenceBreakdown(analysis)}
+        corroboration={computeSourceCorroboration(analysis)}
+      />
       {analysis.agentTrace && <AgentTracePanel trace={analysis.agentTrace} />}
 
       <Tabs defaultValue="snapshot">

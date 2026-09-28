@@ -525,6 +525,93 @@ export const agentTraceEntrySchema = z.object({
 });
 export type AgentTraceEntry = z.infer<typeof agentTraceEntrySchema>;
 
+// ---------------------------------------------------------------------------
+// Fact-Checker — an independent re-verification pass over the highest-stakes
+// "verified_fact" claims already produced elsewhere in the pipeline. Never
+// persisted on FullAnalysis; it's applied in place (see
+// lib/ai/factCheckCollector.ts) and only its effects (updated claim
+// status/sources/conflicting) survive.
+// ---------------------------------------------------------------------------
+
+export const factCheckEntrySchema = z.object({
+  id: z.string().describe("Must exactly match one of the provided claim ids — never invent a new one"),
+  verdict: z.enum(["confirmed", "contradicted", "inconclusive"]),
+  source: sourceSchema.optional().describe("Required for confirmed/contradicted; omit for inconclusive"),
+});
+export type FactCheckEntry = z.infer<typeof factCheckEntrySchema>;
+
+export const factCheckResultSchema = z.object({
+  checked: z.array(factCheckEntrySchema),
+});
+export type FactCheckResult = z.infer<typeof factCheckResultSchema>;
+
+// ---------------------------------------------------------------------------
+// Live Follow-Up Q&A — Anis can type any question about a finished analysis
+// and get a grounded, evidence-tagged answer, live during the demo.
+//
+// followUpAnswerSchema reuses claimSchema directly for "answer" so the
+// response renders through the EXISTING <ClaimBlock> component with zero new
+// rendering code — an unanswerable question just comes back status:"unknown"
+// exactly like any other claim in the app.
+//
+// followUpDigestSchema is built CLIENT-SIDE from a full FullAnalysis (see
+// lib/ai/prompts/followUpDigest.ts), same reason as comparisonDigestSchema:
+// only this digest — never the full analysis — goes over the wire to
+// /api/follow-up.
+// ---------------------------------------------------------------------------
+
+export const followUpAnswerSchema = z.object({
+  question: z.string(),
+  answer: claimSchema,
+});
+export type FollowUpAnswer = z.infer<typeof followUpAnswerSchema>;
+
+export const followUpDigestSchema = z.object({
+  company: z.object({ name: z.string(), sector: z.string(), stage: z.string() }),
+  snapshot: z.object({
+    problem: z.string(),
+    solution: z.string(),
+    product: z.string(),
+    customer: z.string(),
+    businessModelSummary: z.string(),
+    whyNow: z.string(),
+  }),
+  market: z.object({ category: z.string(), tam: z.string(), sam: z.string(), som: z.string(), whyNow: z.string() }),
+  traction: z.object({
+    revenue: z.string(),
+    arr: z.string(),
+    growth: z.string(),
+    customers: z.string(),
+    signals: z.array(z.string()),
+  }),
+  competitors: z.array(z.object({ name: z.string(), category: z.string(), differentiation: z.string() })),
+  moatSummary: z.array(z.object({ factor: z.string(), strength: z.string(), reasoning: z.string() })),
+  founders: z.array(z.object({ name: z.string(), role: z.string().optional(), background: z.array(z.string()) })),
+  devilsAdvocate: z.object({ reasonsThisCouldFail: z.array(z.string()), whatWouldMakeTheThesisWrong: z.string() }),
+  strategicFitSummaries: z.array(z.string()),
+  openQuestions: z.array(z.string()),
+});
+export type FollowUpDigest = z.infer<typeof followUpDigestSchema>;
+
+// ---------------------------------------------------------------------------
+// Deal Flow Triage — a fast, lightweight pass on 2-10 companies side by side,
+// mirroring how a real VC fund triages deal flow before committing to a full
+// analysis. Deliberately has NO numeric/score/ranking field anywhere: it is
+// structurally impossible to express a "winner" here, not just discouraged
+// by prompt wording (see lib/ai/prompts/triage.ts).
+// ---------------------------------------------------------------------------
+
+export const triageEntrySchema = z.object({
+  companyName: z.string(),
+  sector: z.string(),
+  stage: z.string(),
+  summary: claimSchema,
+  opportunitySignal: z.string(),
+  riskSignal: z.string(),
+  keyOpenQuestion: z.string(),
+});
+export type TriageEntry = z.infer<typeof triageEntrySchema>;
+
 export const fullAnalysisSchema = z.object({
   id: z.string(),
   input: startupInputSchema,

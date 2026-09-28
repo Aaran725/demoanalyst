@@ -12,11 +12,13 @@ const labelClass = "text-xs font-semibold uppercase tracking-wide text-ink-500";
 export function StartupInputForm({
   onSubmit,
   submitLabel = "Analyze Startup",
+  initialCompanyName = "",
 }: {
   onSubmit: (input: StartupInput) => void;
   submitLabel?: string;
+  initialCompanyName?: string;
 }) {
-  const [companyName, setCompanyName] = useState("");
+  const [companyName, setCompanyName] = useState(initialCompanyName);
   const [website, setWebsite] = useState("");
   const [sector, setSector] = useState("");
   const [country, setCountry] = useState("");

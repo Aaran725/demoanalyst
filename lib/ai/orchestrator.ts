@@ -19,10 +19,13 @@ import {
   founderQuestionsSchema,
   nextDiligenceSchema,
   icMemoSchema,
+  factCheckResultSchema,
   type StartupInput,
   type FullAnalysis,
   type AgentTraceEntry,
 } from "./schemas";
+import { collectVerifiedFactClaims, applyFactCheckVerdicts } from "./factCheckCollector";
+import { buildFactCheckPrompt } from "./prompts/factCheck";
 import { buildResearchPrompt } from "./prompts/research";
 import { buildMarketPrompt } from "./prompts/market";
 import { buildProductPrompt } from "./prompts/product";
@@ -237,6 +240,37 @@ export async function runAnalysisPipeline(
     );
   });
 
+  // FactCheckerAgent — also Round 3: an independent re-verification pass
+  // over the highest-stakes "verified_fact" claims from Round 2. Needs
+  // every Round 2 section that can contain a Claim (market, product,
+  // businessModel, traction, founders — see factCheckCollector.ts), so it
+  // waits on all 5, same as any other Round 3 agent waiting on its actual
+  // inputs. Candidates are collected here (not before Round 2 resolves)
+  // since collectVerifiedFactClaims needs the real Round 2 output objects.
+  const factCheckPromise = Promise.all([
+    marketPromise,
+    productPromise,
+    businessModelPromise,
+    tractionPromise,
+    foundersPromise,
+  ]).then(async ([market, product, businessModel, traction, founders]) => {
+    onProgress?.("fact_check");
+    const candidates = collectVerifiedFactClaims({ snapshot, market, product, businessModel, traction, founders });
+    if (candidates.length === 0) {
+      return { candidates, result: { checked: [] } };
+    }
+    const result = await runStep(
+      provider,
+      "FactCheckerAgent",
+      factCheckResultSchema,
+      buildFactCheckPrompt(input, snapshot, candidates),
+      signal,
+      6,
+      recordTrace(3)
+    );
+    return { candidates, result };
+  });
+
   // Round 4 (Diligence) — needs businessModel/traction/competitors +
   // devilsAdvocate, NOT moat or strategicFit, so it starts as soon as
   // those four are ready rather than waiting for all of Round 3.
@@ -265,21 +299,42 @@ export async function runAnalysisPipeline(
 
   // Resolve everything together — whatever the true last constraint turns
   // out to be for this particular run, this is where it's actually awaited.
-  const [market, product, businessModel, traction, competitors, founders, pegasusFit, japan, moat, strategicFit, devilsAdvocate, diligence] =
-    await Promise.all([
-      marketPromise,
-      productPromise,
-      businessModelPromise,
-      tractionPromise,
-      competitorsPromise,
-      foundersPromise,
-      pegasusFitPromise,
-      japanPromise,
-      moatPromise,
-      strategicFitPromise,
-      devilsAdvocatePromise,
-      diligencePromise,
-    ]);
+  const [
+    market,
+    product,
+    businessModel,
+    traction,
+    competitors,
+    founders,
+    pegasusFit,
+    japan,
+    moat,
+    strategicFit,
+    devilsAdvocate,
+    diligence,
+    factCheck,
+  ] = await Promise.all([
+    marketPromise,
+    productPromise,
+    businessModelPromise,
+    tractionPromise,
+    competitorsPromise,
+    foundersPromise,
+    pegasusFitPromise,
+    japanPromise,
+    moatPromise,
+    strategicFitPromise,
+    devilsAdvocatePromise,
+    diligencePromise,
+    factCheckPromise,
+  ]);
+
+  // Apply fact-check verdicts before building analysisSoFar/calling Memo, so
+  // the corrected claim status/sources flow into the final report. Honest
+  // limitation: DiligenceAgent runs concurrently with FactCheckerAgent (both
+  // are Round 3/4), so its output was generated from the pre-fact-check
+  // claims — only Memo and the rendered report itself see the corrected data.
+  applyFactCheckVerdicts(factCheck.candidates, factCheck.result);
 
   const analysisSoFar = {
     snapshot,

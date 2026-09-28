@@ -17,6 +17,7 @@ export type ProgressStep =
   | "pegasus_fit"
   | "japan"
   | "devils_advocate"
+  | "fact_check"
   | "diligence"
   | "memo"
   | "done";
@@ -34,6 +35,7 @@ export const PROGRESS_STEPS: ProgressStep[] = [
   "pegasus_fit",
   "japan",
   "devils_advocate",
+  "fact_check",
   "diligence",
   "memo",
 ];
@@ -59,6 +61,7 @@ export const PROGRESS_ROUND: Record<ProgressStep, number> = {
   moat: 3,
   strategic_fit: 3,
   devils_advocate: 3,
+  fact_check: 3,
   diligence: 4,
   memo: 4,
   done: 5,
@@ -77,6 +80,7 @@ export const PROGRESS_LABELS: Record<ProgressStep, string> = {
   pegasus_fit: "Applying Pegasus VC-as-a-Service lens...",
   japan: "Analyzing Japan opportunity...",
   devils_advocate: "Running Devil's Advocate...",
+  fact_check: "Independently fact-checking key claims...",
   diligence: "Preparing diligence questions...",
   memo: "Building IC memo...",
   done: "Complete",
