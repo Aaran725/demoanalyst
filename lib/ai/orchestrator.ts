@@ -133,7 +133,11 @@ export async function runAnalysisPipeline(
     productAnalysisSchema,
     buildProductPrompt(input, snapshot),
     signal,
-    undefined,
+    // Data/distribution/integration advantage are real, findable facts
+    // (real partnerships, real integrations) for a documented company —
+    // without search this agent could only guess from the thin snapshot,
+    // which was leaving genuinely-findable specifics marked "unknown".
+    5,
     recordTrace(2),
     onLiveEvent
   );
@@ -143,7 +147,11 @@ export async function runAnalysisPipeline(
     businessModelSchema,
     buildBusinessModelPrompt(input, snapshot),
     signal,
-    undefined,
+    // Revenue/pricing model are often genuinely public for a notable
+    // company (published pricing pages, press on business model) — same
+    // "give it the tool before expecting it to find the fact" fix as
+    // MarketAgent/ProductAgent above.
+    6,
     recordTrace(2),
     onLiveEvent
   );
@@ -169,7 +177,10 @@ export async function runAnalysisPipeline(
     competitorMapSchema,
     buildCompetitionPrompt(input, snapshot),
     signal,
-    undefined,
+    // Real, named competitors with real funding/scale details need actual
+    // search, not recall — without it this agent could only name whatever
+    // competitors it happened to remember from training, possibly stale.
+    6,
     recordTrace(2),
     onLiveEvent
   );
@@ -226,7 +237,11 @@ export async function runAnalysisPipeline(
       competitiveMoatSchema,
       buildMoatPrompt(input, snapshot, product, competitors),
       signal,
-      undefined,
+      // Small budget — lets it check specifics (brand reputation,
+      // regulatory position, real partnerships) across 10 factors rather
+      // than reasoning purely over Product/Competitors' already-passed-in
+      // output.
+      4,
       recordTrace(3),
       onLiveEvent
     );

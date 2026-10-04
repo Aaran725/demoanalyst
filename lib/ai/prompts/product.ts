@@ -12,6 +12,16 @@ customer experience, switching costs, and integration advantage. Be
 skeptical — most claimed differentiation is temporary or copyable. Then give
 concrete, company-specific reasons customers may choose this product, and
 reasons they may not.
+
+You have live web search. Use it to find real, specific facts where they
+exist — real integration partnerships, real published benchmarks, real
+customer testimonials or case studies — and cite them as "verified_fact".
+For fields that are genuinely a judgment call rather than a discrete fact
+(e.g. whether a cost or data advantage is real and durable), search for
+relevant evidence first, then give your own reasoned assessment as
+"ai_analysis" — including an honest "no clear advantage found" when that's
+the honest read. That is a completed analysis, not a gap; do not mark it
+"unknown" just because the answer isn't a clean yes.
 `);
 
   const user = `

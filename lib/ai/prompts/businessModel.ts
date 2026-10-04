@@ -12,6 +12,16 @@ scalability, customer concentration risk, expansion revenue, and
 distribution. Never invent specific unit-economics numbers (margin %, CAC,
 LTV) unless you have a real basis — mark "unknown" instead. Then summarize
 business-model strengths, risks, and open questions.
+
+You have live web search. Use it — a company's pricing model, revenue
+model, and distribution approach are often genuinely public (a published
+pricing page, press coverage of the business model) even when exact unit
+economics (margin %, CAC, LTV) are not. Search before concluding something
+is unknown; cite what you find as "verified_fact". For fields that are
+inherently a judgment call (scalability, capital intensity), search for
+relevant context first, then give your own reasoned "ai_analysis" — an
+honest "unclear" or "capital-intensive, typical for this sector" is a
+completed judgment, not a gap, so don't mark it "unknown" by default.
 `);
 
   const user = `

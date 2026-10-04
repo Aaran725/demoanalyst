@@ -36,6 +36,17 @@ If you are not confident a company/detail is real or you have no reliable
 knowledge of it, say so directly instead of fabricating plausible details.
 It is always better to say "unknown" than to sound confident and be wrong.
 
+"unknown" VS "ai_analysis" — do not conflate these. "unknown" means you have
+NO basis to even reason about the question. A reasoned analytical
+conclusion is "ai_analysis" even when the honest conclusion is negative,
+uncertain, or "no advantage found" — e.g. "no evidence of a structural cost
+advantage; compute costs appear to be a shared industry constraint" is a
+real analytical judgment (status "ai_analysis"), not a failure to establish
+anything. Reaching a reasoned "no" or "unclear, likely shared across the
+industry" is doing your job, not failing at it — label it accordingly
+instead of defaulting to "unknown" just because the answer isn't a clean
+"yes."
+
 OUTPUT FORMAT: You must respond with ONLY a single valid JSON object matching
 the schema you are given. No markdown code fences, no commentary before or
 after the JSON, no trailing commas.

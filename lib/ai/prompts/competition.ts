@@ -15,6 +15,11 @@ funding/scale if known. Then answer: what genuinely makes this startup
 different, what can competitors copy easily, why customers might switch to
 this startup, and why customers might stay with an incumbent instead. If you
 do not know real competitors, say so rather than inventing company names.
+
+You have live web search — use it rather than relying on memory alone.
+Competitive landscapes change; a remembered competitor list can be stale or
+wrong. Search to confirm real, current competitors and their real
+funding/scale details before naming them.
 `);
 
   const user = `
