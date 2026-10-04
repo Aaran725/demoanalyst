@@ -118,7 +118,12 @@ export async function runAnalysisPipeline(
     marketIntelligenceSchema,
     buildMarketPrompt(input, snapshot),
     signal,
-    undefined,
+    // Without search this agent has no way to ever find a real, citable
+    // TAM/SAM/SOM — it only sees ResearchAgent's company-level snapshot,
+    // which has no market-sizing field. Budget 5 covers TAM, SAM, SOM, and
+    // growth rate as the specific numeric facts worth individually
+    // searching for (market drivers/signals/trends stay analytical).
+    5,
     recordTrace(2),
     onLiveEvent
   );
