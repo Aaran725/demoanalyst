@@ -190,7 +190,12 @@ export async function runAnalysisPipeline(
     founderAnalysisSchema,
     buildFounderPrompt(input, snapshot),
     signal,
-    true,
+    // The default budget (4) is shared across EVERY founder on the team —
+    // a company with 2-3 co-founders, each needing education + prior
+    // companies + experience individually searched, runs out fast. Same
+    // "give it enough budget to actually do the job" fix as
+    // TractionAgent's own elevated budget below.
+    8,
     recordTrace(2),
     onLiveEvent
   );

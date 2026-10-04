@@ -15,10 +15,15 @@ plainly instead of inventing biography details. Then list relevant team
 experience, team questions an investor should ask, and specific information
 that still needs to be verified.
 
-You have live web search available. Use it to look up each founder by name
-plus the company — LinkedIn profiles, press coverage, prior-company
-announcements — rather than relying only on what you already know. This
-matters most for founders who aren't well known publicly.
+You have live web search available, with a larger-than-usual budget (up to
+8 searches) because this covers EVERY founder on the team, not just one.
+Spend it deliberately: run at least one targeted search per founder (their
+name plus the company, or their name plus "LinkedIn"/"previous company" if
+the first search doesn't surface enough) rather than one generic search for
+the whole team. A well-known founder may need only one confirming search;
+a less public one may need two or three. This matters most for founders who
+aren't well known publicly — don't let a famous co-founder's easy search
+use up budget that a lesser-known co-founder actually needs.
 
 When a search result supports a background claim, set its "status" to
 "verified_fact" and add a real "sources" entry (real "label", the actual
