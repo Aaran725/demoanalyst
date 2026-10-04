@@ -39,6 +39,17 @@ export function createAnthropicProvider(): AIProvider {
           ]
         : system;
 
+      // The SDK's own default timeout is 10 minutes per request, AND it
+      // retries timed-out requests internally by default — so with no
+      // override, a single stuck call's real worst case is well beyond 10
+      // minutes, with zero feedback to the user in the meantime. Bounded
+      // explicitly here instead: generous enough to not kill a legitimately
+      // slow (but working) search-heavy call — live-demo testing has seen a
+      // real, successful 341s call — while still giving a hung call a real
+      // ceiling so callAgent's existing retry-once logic actually gets a
+      // chance to run instead of the UI just sitting frozen.
+      const timeout = enableWebSearch ? 300_000 : 60_000;
+
       const response = await client.messages.create(
         {
           model,
@@ -68,7 +79,7 @@ export function createAnthropicProvider(): AIProvider {
               }
             : {}),
         },
-        { signal }
+        { signal, timeout }
       );
 
       // With web search on, Claude's answer can be split across multiple
